@@ -7,31 +7,34 @@
  * Version: 0.1
  * Author URI: http://www.coviu.com/
  * License: GPL2
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html.
+ * Text Domain: coviu-video
+ * Domain Path: /languages
  */
 
 /*
-  Copyright 2015  Silvia Pfeiffer  (email : silviapfeiffer1@gmail.com)
+	Copyright 2015  Silvia Pfeiffer  (email : silviapfeiffer1@gmail.com)
 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation; either version 2 of the License, or
-  (at your option) any later version.
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License as published by
+	the Free Software Foundation; either version 2 of the License, or
+	(at your option) any later version.
 
-  This program is distributed in the hope that it will be useful,
-  but WITHOUT ANY WARRANTY; without even the implied warranty of
-  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  GNU General Public License for more details.
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
 
-  You should have received a copy of the GNU General Public License
-  along with this program; if not, write to the Free Software
-  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-  @package    coviu-video
-  @author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>
-  @copyright  Copyright 2015 Silvia Pfeiffer
-  @license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
-  @version    0.1
-  @link       http://wordpress.org/extend/plugins/coviu-video/
+	@package    coviu-video
+	@author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>
+	@copyright  Copyright 2015 Silvia Pfeiffer
+	@license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
+	@version    0.1
+	@link       http://wordpress.org/extend/plugins/coviu-video/
 
 */
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
@@ -41,16 +44,16 @@ defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
 register_activation_hook( __FILE__, 'cvu_setup_options' );
 function cvu_setup_options() {
-    $options = new stdClass();
-    $options->api_key = '';
-    $options->secret_key = '';
+	$options = new stdClass();
+	$options->api_key = '';
+	$options->secret_key = '';
 
-    add_option('coviu-video', $options);
+	add_option('coviu-video', $options);
 }
 
 register_deactivation_hook( __FILE__, 'cvu_teardown_options' );
 function cvu_teardown_options() {
-    delete_option('coviu-video');   
+	delete_option('coviu-video');   
 }
 
 
@@ -59,75 +62,78 @@ function cvu_teardown_options() {
 add_action( 'admin_menu', 'cvu_admin_menu' );
 
 function cvu_admin_menu() {
-    add_options_page(__('Coviu Video Settings', 'coviu-video'), __('Coviu Video', 'coviu-video'), 'manage_options', __FILE__, 'cvu_settings_page');
+	add_options_page(__('Coviu Video Settings', 'coviu-video'), __('Coviu Video', 'coviu-video'), 'manage_options', __FILE__, 'cvu_settings_page');
 }
 
 function cvu_settings_page() {
-    if ( !current_user_can( 'manage_options' ) )  {
-        wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
-    }
+	if ( !current_user_can( 'manage_options' ) )  {
+		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+	}
 
-    // retrieve stored options
-    $options = get_option('coviu-video');
+	// retrieve stored options
+	$options = get_option('coviu-video');
 
-    // process form data
-    if(isset($_POST['coviu'])) {
+	// process form data
+	if( isset($_POST['coviu']) ) {
 
-        // nonce check
-        if (! isset( $_POST['cvu_options_security'] ) ||
-            ! wp_verify_nonce( $_POST['cvu_options_security'], 'cvu_options')) {
-            print 'Sorry, your nonce did not verify.';
-            exit;
-        } else {
-            // clean up entered data from surplus white space
-            $_POST['coviu']['api_key'] = trim(sanitize_text_field($_POST['coviu']['api_key']));
-            $_POST['coviu']['secret_key'] = trim(sanitize_text_field($_POST['coviu']['secret_key']));
+		// nonce check
+		if (! isset( $_POST['cvu_options_security'] ) ||
+			! wp_verify_nonce( $_POST['cvu_options_security'], 'cvu_options')) {
+			print 'Sorry, your nonce did not verify.';
+			exit;
 
-            // check if credentials were provided
-            if (!$_POST['coviu']['api_key'] || !$_POST['coviu']['secret_key']) {
-                ?>
-                    <div class="error">
-                        <p><strong><?php echo __('Missing API credentials.', 'coviu-video'); ?></strong></p>
-                    </div>
-                <?php
-            }
-            else {
+		} else {
+			// clean up entered data from surplus white space
+			$_POST['coviu']['api_key']    = trim(sanitize_text_field($_POST['coviu']['api_key']));
+			$_POST['coviu']['secret_key'] = trim(sanitize_text_field($_POST['coviu']['secret_key']));
 
-                // updating credentials
-                $options->api_key    = $_POST['coviu']['api_key'];
-                $options->secret_key = $_POST['coviu']['secret_key'];
-                update_option('coviu-video', $options);
+			// check if credentials were provided
+			if ( !$_POST['coviu']['api_key'] || !$_POST['coviu']['secret_key'] ) {
+				?>
+				<div class="error">
+					<p><strong><?php echo __('Missing API credentials.', 'coviu-video'); ?></strong></p>
+				</div>
+				<?php
+			} else {
 
-                ?>
-                    <div class="updated">
-                        <p><strong><?php echo __('Stored credentials.', 'coviu-video'); ?></strong></p>
-                    </div>
-                <?php
-            }
-        }
-    }
+				// updating credentials
+				$options->api_key    = $_POST['coviu']['api_key'];
+				$options->secret_key = $_POST['coviu']['secret_key'];
+				update_option('coviu-video', $options);
 
-    // render the settings page
-    ?>
-        <div class="wrap">
-            <h2><?php _e('Coviu Video Settings', 'coviu-video'); ?></h2>
-            <p>To use Coviu Video Conferencing, you need a <a href="https://www.coviu.com/developer/" target="_blank">developer account</a> and credentials for accessing the API.</p>
+				?>
+				<div class="updated">
+					<p><strong><?php echo __('Stored credentials.', 'coviu-video'); ?></strong></p>
+				</div>
+				<?php
+			}
+		}
+	}
 
-            <form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
-            <?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
+	// render the settings page
+	?>
+	<div class="wrap">
+		<h2><?php _e('Coviu Video Settings', 'coviu-video'); ?></h2>
+		<p>
+			To use Coviu Video Conferencing, you need a <a href="https://www.coviu.com/developer/" target="_blank">developer account</a> and credentials for accessing the API.
+		</p>
 
-            <p>
-                <?php _e('API Key:', 'coviu-video'); ?>
-                <input type="text" name="coviu[api_key]" value="<?php echo $options->api_key ?>"/>
-            <p>
-                <?php _e('Secret Key:', 'coviu-video'); ?>
-                <input type="text" name="coviu[secret_key]" value="<?php echo $options->secret_key ?>"/>
-            </p>
-            <p class="submit">
-                <input name="Submit" type="submit" class="button-primary" value="<?php _e('Add credentials', 'coviu-video'); ?>" />
-            </p>
+		<form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
+			<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
 
-        </div>
-    <?php
+			<p>
+				<?php _e('API Key:', 'coviu-video'); ?>
+				<input type="text" name="coviu[api_key]" value="<?php echo $options->api_key ?>"/>
+			</p>
+			<p>
+				<?php _e('Secret Key:', 'coviu-video'); ?>
+				<input type="text" name="coviu[secret_key]" value="<?php echo $options->secret_key ?>"/>
+			</p>
+			<p class="submit">
+				<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add credentials', 'coviu-video'); ?>" />
+			</p>
+		</form>
+	</div>
+	<?php
 
 }
