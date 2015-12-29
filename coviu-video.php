@@ -46,7 +46,7 @@ register_activation_hook( __FILE__, 'cvu_setup_options' );
 function cvu_setup_options() {
 	$options = new stdClass();
 	$options->api_key = '';
-	$options->secret_key = '';
+	$options->api_key_secret = '';
 
 	add_option('coviu-video', $options);
 }
@@ -84,11 +84,11 @@ function cvu_settings_page() {
 
 		} else {
 			// clean up entered data from surplus white space
-			$_POST['coviu']['api_key']    = trim(sanitize_text_field($_POST['coviu']['api_key']));
-			$_POST['coviu']['secret_key'] = trim(sanitize_text_field($_POST['coviu']['secret_key']));
+			$_POST['coviu']['api_key']        = trim(sanitize_text_field($_POST['coviu']['api_key']));
+			$_POST['coviu']['api_key_secret'] = trim(sanitize_text_field($_POST['coviu']['api_key_secret']));
 
 			// check if credentials were provided
-			if ( !$_POST['coviu']['api_key'] || !$_POST['coviu']['secret_key'] ) {
+			if ( !$_POST['coviu']['api_key'] || !$_POST['coviu']['api_key_secret'] ) {
 				?>
 				<div class="error">
 					<p><strong><?php echo __('Missing API credentials.', 'coviu-video'); ?></strong></p>
@@ -98,7 +98,7 @@ function cvu_settings_page() {
 
 				// updating credentials
 				$options->api_key    = $_POST['coviu']['api_key'];
-				$options->secret_key = $_POST['coviu']['secret_key'];
+				$options->api_key_secret = $_POST['coviu']['api_key_secret'];
 				update_option('coviu-video', $options);
 
 				?>
@@ -127,7 +127,7 @@ function cvu_settings_page() {
 			</p>
 			<p>
 				<?php _e('Secret Key:', 'coviu-video'); ?>
-				<input type="text" name="coviu[secret_key]" value="<?php echo $options->secret_key ?>"/>
+				<input type="text" name="coviu[api_key_secret]" value="<?php echo $options->api_key_secret ?>"/>
 			</p>
 			<p class="submit">
 				<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add credentials', 'coviu-video'); ?>" />
