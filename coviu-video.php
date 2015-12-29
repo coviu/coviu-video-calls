@@ -34,19 +34,100 @@
   @link       http://wordpress.org/extend/plugins/coviu-video/
 
 */
+defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
+
+
+/// ***  Set up and remove options for plugin *** ///
+
+register_activation_hook( __FILE__, 'cvu_setup_options' );
+function cvu_setup_options() {
+    $options = new stdClass();
+    $options->api_key = '';
+    $options->secret_key = '';
+
+    add_option('coviu-video', $options);
+}
+
+register_deactivation_hook( __FILE__, 'cvu_teardown_options' );
+function cvu_teardown_options() {
+    delete_option('coviu-video');   
+}
 
 
 /// ***   Admin Settings Page   *** ///
+
 add_action( 'admin_menu', 'cvu_admin_menu' );
 
 function cvu_admin_menu() {
-    add_options_page(__('Coviu Video Settings', 'coviu-video'), __('Coviu Video', 'coviu-video'), 'edit_posts', __FILE__, 'cvu_settings_page');
+    add_options_page(__('Coviu Video Settings', 'coviu-video'), __('Coviu Video', 'coviu-video'), 'manage_options', __FILE__, 'cvu_settings_page');
 }
 
 function cvu_settings_page() {
+    if ( !current_user_can( 'manage_options' ) )  {
+        wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+    }
+
+    // retrieve stored options
+    $options = get_option('coviu-video');
+
+    // process form data
+    if(isset($_POST['coviu'])) {
+
+        // nonce check
+        if (! isset( $_POST['cvu_options_security'] ) ||
+            ! wp_verify_nonce( $_POST['cvu_options_security'], 'cvu_options')) {
+            print 'Sorry, your nonce did not verify.';
+            exit;
+        } else {
+            // clean up entered data from surplus white space
+            $_POST['coviu']['api_key'] = trim(sanitize_text_field($_POST['coviu']['api_key']));
+            $_POST['coviu']['secret_key'] = trim(sanitize_text_field($_POST['coviu']['secret_key']));
+
+            // check if credentials were provided
+            if (!$_POST['coviu']['api_key'] || !$_POST['coviu']['secret_key']) {
+                ?>
+                    <div class="error">
+                        <p><strong><?php echo __('Missing API credentials.', 'coviu-video'); ?></strong></p>
+                    </div>
+                <?php
+            }
+            else {
+
+                // updating credentials
+                $options->api_key    = $_POST['coviu']['api_key'];
+                $options->secret_key = $_POST['coviu']['secret_key'];
+                update_option('coviu-video', $options);
+
+                ?>
+                    <div class="updated">
+                        <p><strong><?php echo __('Stored credentials.', 'coviu-video'); ?></strong></p>
+                    </div>
+                <?php
+            }
+        }
+    }
+
+    // render the settings page
     ?>
         <div class="wrap">
             <h2><?php _e('Coviu Video Settings', 'coviu-video'); ?></h2>
+            <p>To use Coviu Video Conferencing, you need a <a href="https://www.coviu.com/developer/" target="_blank">developer account</a> and credentials for accessing the API.</p>
+
+            <form method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
+            <?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
+
+            <p>
+                <?php _e('API Key:', 'coviu-video'); ?>
+                <input type="text" name="coviu[api_key]" value="<?php echo $options->api_key ?>"/>
+            <p>
+                <?php _e('Secret Key:', 'coviu-video'); ?>
+                <input type="text" name="coviu[secret_key]" value="<?php echo $options->secret_key ?>"/>
+            </p>
+            <p class="submit">
+                <input name="Submit" type="submit" class="button-primary" value="<?php _e('Add credentials', 'coviu-video'); ?>" />
+            </p>
+
         </div>
     <?php
+
 }
