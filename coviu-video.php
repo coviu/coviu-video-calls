@@ -40,6 +40,8 @@
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
 
+require_once(WP_PLUGIN_DIR . '/coviu-video/coviu-auth.php');
+
 /// ***  Set up and remove options for plugin *** ///
 
 register_activation_hook( __FILE__, 'cvu_setup_options' );
