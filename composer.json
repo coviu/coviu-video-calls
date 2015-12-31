@@ -1,0 +1,7 @@
+{
+    "require": {
+        "rmccue/requests": ">=1.0",
+        "firebase/php-jwt": "^3.0",
+        "ramsey/uuid": "^3.1"
+    }
+}
