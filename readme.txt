@@ -47,7 +47,11 @@ The call is subsequently set up directly between all the participants. All audio
 
 On mobile devices, Coviu works in the same browsers as on the desktop. Coviu also offers Android and iOS applications in which the video calls can be held. Contact support@coviu.com for more information.
 
+= What shortcodes are available? =
 
+The general shortcode is [coviu-video], which creates a button that links to a video conference overlay. You should provide a name and email address to the shortcode to associate the session with a person.
+
+[coviu-video name='Dr. Who' email='drwho@gmail.com']
 
  
 

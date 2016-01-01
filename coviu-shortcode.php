@@ -20,7 +20,7 @@
 
 /*
  * Functions related to setting up a shortcode for coviu video button.
- * [coviu-video]
+ * [coviu-video nam='Dr. Who' email='drwho@gmail.com']
  */
 
 require_once(WP_PLUGIN_DIR . '/coviu-video/coviu-auth.php');
@@ -39,8 +39,14 @@ function cvu_shortcode( $atts ){
   $api_key = $options->api_key;
   $api_key_secret = $options->api_key_secret;
   if (!$api_key || !$api_key_secret) {
-    return "";
+    return "Missing Coviu API keys";
   }
+
+  // get shortcode attributes
+  extract(shortcode_atts(array(
+    'name'  => '',
+    'email' => '',
+    ), $atts));
 
   // Recover an access token
   $grant = get_access_token( $api_key, $api_key_secret );
@@ -53,8 +59,8 @@ function cvu_shortcode( $atts ){
   $subscription = create_subscription( $grant->access_token,
                                        $api_root,
                                        array('ref' => $subscription_ref->toString(),
-                                            'name' => 'Dr. Jane Who',
-                                           'email' => 'briely.marum@gmail.com'
+                                            'name' => $name,
+                                           'email' => $email
                                        ) );
 
   // generate a random string for the session Id.
@@ -64,11 +70,11 @@ function cvu_shortcode( $atts ){
   // Sign a jwt for the owner of the subscription. This lets them into the call straight away.
   $token = array(
       'iss'   => $api_key,
-      'un'    => 'Dr. Jane Who',
+      'un'    => $name,
       'ref'   => $subscription_ref,
       'sid'   => $session_id,
       'img'   => 'http://www.fillmurray.com/200/300',
-      'email' => 'dr.who@gmail.com',
+      'email' => $email,
       'rle'   => 'owner',
       'rtn'   => 'https://coviu.com',
       'nbf'   => time(),
