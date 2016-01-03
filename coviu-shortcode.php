@@ -23,8 +23,6 @@
  * [coviu-video nam='Dr. Who' email='drwho@gmail.com']
  */
 
-require_once(WP_PLUGIN_DIR . '/coviu-video/coviu-auth.php');
-
 use Ramsey\Uuid\Uuid;
 use Firebase\JWT\JWT;
 
