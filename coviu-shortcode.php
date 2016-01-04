@@ -19,17 +19,25 @@
 */
 
 /*
- * Functions related to setting up a shortcode for coviu video button.
- * [coviu-video nam='Dr. Who' email='drwho@gmail.com']
+ * Set up a shortcode for coviu video button for the owner:
+ * [coviu-link-owner ref='xxx' sessionid='yyy' start='time' end='time']
+ * - identify the owner by ref
+ * - provide a sessionid to allow referencing it for guest, too
+ * - provide optional start and end time
+ *
+ * Set up a shortcode for coviu video URL for the guest:
+ * [coviu-link-guest name='Dr. Who' email='drwho@gmail.com']
+
  */
 
 use Ramsey\Uuid\Uuid;
 use Firebase\JWT\JWT;
 
-/// ***   Short Code   *** ///
-add_shortcode( 'coviu-video', 'cvu_shortcode' );
+/// ***   Short Codes   *** ///
+add_shortcode( 'coviu-link-owner', 'cvu_shortcode_owner' );
+//add_shortcode( 'coviu-link-guest', 'cvu_shortcode_guest' );
 
-function cvu_shortcode( $atts ){
+function cvu_shortcode_owner( $atts ){
   global $endpoint;
 
   // retrieve stored api keys
@@ -42,8 +50,8 @@ function cvu_shortcode( $atts ){
 
   // get shortcode attributes
   extract(shortcode_atts(array(
-    'name'  => '',
-    'email' => '',
+    'ref'       => '',
+    'sessionid' => '',
     ), $atts));
 
   // Recover an access token
@@ -52,27 +60,21 @@ function cvu_shortcode( $atts ){
   // Get the root of the api
   $api_root = get_api_root($grant->access_token);
 
-  // Create a new subscription for one of your users
-  $subscription_ref = Uuid::uuid4();
-  $subscription = create_subscription( $grant->access_token,
-                                       $api_root,
-                                       array('ref' => $subscription_ref->toString(),
-                                            'name' => $name,
-                                           'email' => $email
-                                       ) );
+  // Retrieve subscription by ref
+  $subscription = get_subscription_by_ref($grant->access_token, $api_root, $ref);
 
-  // generate a random string for the session Id.
-  // This only needs to be known to the participants.
-  $session_id = Uuid::uuid4()->toString();
+  if (!$subscription) {
+    return sprintf(__("<p><i>ERROR: user reference \"%s\" not found.</i></p>", 'coviu-video'), $ref);
+  }
 
   // Sign a jwt for the owner of the subscription. This lets them into the call straight away.
   $token = array(
       'iss'   => $api_key,
-      'un'    => $name,
-      'ref'   => $subscription_ref,
-      'sid'   => $session_id,
+      'un'    => $subscription->content->name,
+      'ref'   => $ref,
+      'sid'   => $sessionid,
       'img'   => 'http://www.fillmurray.com/200/300',
-      'email' => $email,
+      'email' => $subscription->content->email,
       'rle'   => 'owner',
       'rtn'   => 'https://coviu.com',
       'nbf'   => time(),
@@ -81,10 +83,10 @@ function cvu_shortcode( $atts ){
 
   $owner = JWT::encode($token, $api_key_secret, 'HS256');
 
-  return cvu_shortcode_display($endpoint."/v1/session/".$owner);
+  return cvu_shortcode_display('owner', $endpoint."/v1/session/".$owner);
 }
 
-function cvu_shortcode_display( $owner_url ) {
+function cvu_shortcode_display( $role, $user_url ) {
 ?>
   <script language="javascript" type="text/javascript">
   function popitup(url) {
@@ -93,8 +95,16 @@ function cvu_shortcode_display( $owner_url ) {
     return false;
   }
   </script>
-  <button><a href="<?php echo $owner_url ?>" onclick="return popitup('<?php echo $owner_url ?>')">Enter video call</a></button>
-<?php
+  <?php
+  if ($role == 'owner') {
+    ?>
+    <button><a href="<?php echo $user_url ?>" onclick="return popitup('<?php echo $user_url ?>')">Enter video call</a></button>
+    <?php
+  } else {
+    ?>
+    <a href="<?php echo $user_url ?>" onclick="return popitup('<?php echo $user_url ?>')">Guest video call link</a>
+    <?php
+  }
 }
 
 

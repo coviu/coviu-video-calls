@@ -154,6 +154,17 @@ function delete_subscription_from_list ( $access_token, $api_root, $subscription
   return $deleted;
 }
 
+function get_subscription_by_ref( $access_token, $api_root, $ref) {
+  $subscriptions = get_subscriptions( $access_token, $api_root );
+
+  for ($i=0, $c=count($subscriptions->content); $i<$c; $i++) {
+    if ( $ref == $subscriptions->content[$i]->content->remoteRef ) {
+      return $subscriptions->content[$i];
+    }
+  }
+  return null;
+}
+
 function get_sessions( $access_token, $api_root) {
   global $endpoint;
 
