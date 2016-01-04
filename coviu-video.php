@@ -249,3 +249,15 @@ function cvu_subscription_display( $subscription ) {
 	</tr>
 	<?php
 }
+
+  // Create a new subscription for one of your users
+/*
+  $subscription = create_subscription( $grant->access_token,
+                                       $api_root,
+                                       array('ref' => $subscription_ref->toString(),
+                                            'name' => $name,
+                                           'email' => $email
+                                       ) );
+
+  echo $subscription_ref;
+*/
