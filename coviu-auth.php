@@ -123,6 +123,37 @@ function get_subscriptions( $access_token, $api_root) {
   return json_decode($response->body);
 }
 
+function delete_subscription( $access_token, $subscription ) {
+  global $endpoint;
+
+  // Delete a previously created subscription.
+  $auth_header = build_oauth2_auth_header( $access_token );
+  $header = array();
+  $header = array_merge( $header, $auth_header );
+
+  $url = $endpoint.$subscription->_links->self->href;
+
+  $response = Requests::delete( $url, $header );
+
+  return json_decode($response->body);
+}
+
+function delete_subscription_from_list ( $access_token, $api_root, $subscriptionId) {
+
+  // find subscription
+  $subscriptions = get_subscriptions( $access_token, $api_root );
+
+  // delete the named subscription
+  $deleted = false;
+  for ($i=0, $c=count($subscriptions->content); $i<$c; $i++) {
+    if ( $subscriptionId == $subscriptions->content[$i]->content->subscriptionId ) {
+      delete_subscription( $access_token, $subscriptions->content[$i] );
+      $deleted = true;
+    }
+  }
+  return $deleted;
+}
+
 function get_sessions( $access_token, $api_root) {
   global $endpoint;
 
@@ -149,21 +180,6 @@ function cvu_get_link( $access_token, $page ) {
   $url = $endpoint.$page->href;
 
   $response = Requests::get( $url, $header );
-
-  return json_decode($response->body);
-}
-
-function delete_subscription( $access_token, $subscription) {
-  global $endpoint;
-
-  // Delete a previously created subscription.
-  $auth_header = build_oauth2_auth_header( $access_token );
-  $header = array();
-  $header = array_merge( $header, $auth_header );
-
-  $url = $endpoint.$subscription->_links->self->href;
-
-  $response = Requests::delete( $url, $header );
 
   return json_decode($response->body);
 }

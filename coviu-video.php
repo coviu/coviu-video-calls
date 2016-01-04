@@ -124,17 +124,7 @@ function cvu_settings_page() {
 				// Get the root of the api
 				$api_root = get_api_root($grant->access_token);
 
-				// find subscription
-				$subscriptions = get_subscriptions( $grant->access_token, $api_root );
-
-				// delete the named subscription
-				$deleted = false;
-				for ($i=0, $c=count($subscriptions->content); $i<$c; $i++) {
-					if ($subscriptionId == $subscriptions->content[$i]->content->subscriptionId) {
-						delete_subscription($grant->access_token, $subscriptions->content[$i]);
-						$deleted = true;
-					}
-				}
+				$deleted = delete_subscription_from_list( $grant->access_token, $api_root, $subscriptionId );
 
 				// notify if deleted
 				if ($deleted) {
