@@ -40,7 +40,7 @@
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
 
-require_once(WP_PLUGIN_DIR . '/coviu-calls/coviu-auth.php');
+require_once(WP_PLUGIN_DIR . '/coviu-calls/coviu-api.php');
 require_once(WP_PLUGIN_DIR . '/coviu-calls/coviu-shortcode.php');
 
 /// ***  Set up and remove options for plugin *** ///
@@ -240,10 +240,10 @@ function cvu_subscriptions_display( $actionurl, $options ) {
 		<table id="subscription_list">
 		<thead>
 			<tr>
-				<th>Subscription ID</th>
+				<th>Reference</th>
 				<th>Name</th>
 				<th>Email</th>
-				<th>Reference</th>
+				<th>Sessions</th>
 				<th>Action</th>
 			</tr>
 		</thead>
@@ -261,7 +261,7 @@ function cvu_subscriptions_display( $actionurl, $options ) {
 			// print active subscriptions
 			for ($i=0, $c=count($subscriptions->content); $i<$c; $i++) {
 				if ($subscriptions->content[$i]->content->active) {
-					cvu_subscription_display( $subscriptions->content[$i] );
+					cvu_subscription_display( $subscriptions->content[$i], $options );
 				}
 			}
 		?>
@@ -271,13 +271,22 @@ function cvu_subscriptions_display( $actionurl, $options ) {
 	<?php
 }
 
-function cvu_subscription_display( $subscription ) {
+function cvu_subscription_display( $subscription, $options ) {
+	// Recover an access token
+	$grant = get_access_token( $options->api_key, $options->api_key_secret );
+
+	// Get the root of the api
+	$api_root = get_api_root($grant->access_token);
+
+	// Retrieve number of sessions
+	$sessions = get_sessions($grant->access_token, $api_root, $subscription);
+
 	?>
 	<tr>
-		<td><?php echo $subscription->content->subscriptionId; ?></td>
+		<td><?php echo $subscription->content->remoteRef; ?></td>
 		<td><?php echo $subscription->content->name; ?></td>
 		<td><?php echo $subscription->content->email; ?></td>
-		<td><?php echo $subscription->content->remoteRef; ?></td>
+		<td><?php echo count($sessions->content); ?></td>
 		<td><a href="#" onclick="delete_subscription('<?php echo $subscription->content->subscriptionId; ?>');"><?php echo __('Delete') ?></a></td>
 	</tr>
 	<?php
@@ -308,11 +317,15 @@ function cvu_subscription_add( $post, $options ) {
 	// Get the root of the api
 	$api_root = get_api_root($grant->access_token);
 
-  // Create a new subscription
-  $subscription = create_subscription( $grant->access_token,
-                                       $api_root,
-                                       array('ref' => $post['ref'],
-                                            'name' => $post['name'],
-                                           'email' => $post['email']
-                                       ) );
+	// Create a new subscription
+	$subscription = create_subscription( $grant->access_token,
+																			 $api_root,
+																			 array('ref' => $post['ref'],
+																						'name' => $post['name'],
+																					 'email' => $post['email']
+																			 ) );
+}
+
+function prettyprint($var) {
+	print '<pre>'; print_r($var); print '</pre>';
 }

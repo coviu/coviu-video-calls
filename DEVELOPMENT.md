@@ -25,9 +25,9 @@ http://teleogistic.net/2011/05/revisiting-git-github-and-the-wordpress-org-plugi
 * git svn dcommit (to send commits to wordpress.org)
 * git svn tag 0.2 (add new release)
 * git tag -a 0.2
-  git push --tags (push tags to github also)
+	git push --tags (push tags to github also)
 * git pull --rebase origin master
-  git push origin master (to get svn tags to github)
+	git push origin master (to get svn tags to github)
 
 
 Old process with SVN:
