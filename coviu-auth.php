@@ -101,6 +101,7 @@ function create_subscription( $access_token, $api_root, $body ) {
   $header = array('Content-Type' => 'application/json');
   $header = array_merge( $header, $auth_header );
 
+  // POST /v1/orgs/<org id>/subscriptions/
   $url = $endpoint.$api_root->_links->subscriptions->href;
 
   $response = Requests::post( $url, $header, json_encode($data) );
@@ -116,6 +117,7 @@ function get_subscriptions( $access_token, $api_root) {
   $header = array();
   $header = array_merge( $header, $auth_header );
 
+  // GET /v1/orgs/<org id>/subscriptions/
   $url = $endpoint.$api_root->_links->subscriptions->href;
 
   $response = Requests::get( $url, $header );
@@ -123,7 +125,7 @@ function get_subscriptions( $access_token, $api_root) {
   return json_decode($response->body);
 }
 
-function delete_subscription( $access_token, $subscription ) {
+function delete_subscription( $access_token, $api_root, $subscriptionId ) {
   global $endpoint;
 
   // Delete a previously created subscription.
@@ -131,27 +133,12 @@ function delete_subscription( $access_token, $subscription ) {
   $header = array();
   $header = array_merge( $header, $auth_header );
 
-  $url = $endpoint.$subscription->_links->self->href;
+  // DELETE /v1/orgs/<org id>/subscriptions/<subscriptionId>
+  $url = $endpoint.$api_root->_links->subscriptions->href.'/'.$subscriptionId;
 
   $response = Requests::delete( $url, $header );
 
   return json_decode($response->body);
-}
-
-function delete_subscription_from_list ( $access_token, $api_root, $subscriptionId) {
-
-  // find subscription
-  $subscriptions = get_subscriptions( $access_token, $api_root );
-
-  // delete the named subscription
-  $deleted = false;
-  for ($i=0, $c=count($subscriptions->content); $i<$c; $i++) {
-    if ( $subscriptionId == $subscriptions->content[$i]->content->subscriptionId ) {
-      delete_subscription( $access_token, $subscriptions->content[$i] );
-      $deleted = true;
-    }
-  }
-  return $deleted;
 }
 
 function get_subscription_by_ref( $access_token, $api_root, $ref) {

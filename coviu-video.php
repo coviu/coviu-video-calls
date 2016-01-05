@@ -291,7 +291,7 @@ function cvu_subscription_delete( $subscriptionId, $options ) {
 	$api_root = get_api_root($grant->access_token);
 
 	// delete the subscription
-	$deleted = delete_subscription_from_list( $grant->access_token, $api_root, $subscriptionId );
+	$deleted = delete_subscription( $grant->access_token, $api_root, $subscriptionId );
 
 	// notify if deleted
 	if ($deleted) {
