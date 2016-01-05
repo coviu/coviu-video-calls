@@ -116,22 +116,12 @@ function cvu_settings_page() {
 
 			} elseif ($_POST['coviu']['action'] == 'delete_subscription') {
 
-				$subscriptionId = $_POST['coviu']['subscription_id'];
+				cvu_subscription_delete( $_POST['coviu']['subscription_id'], $options );
 
-				// Recover an access token
-				$grant = get_access_token( $options->api_key, $options->api_key_secret );
+			} elseif ($_POST['coviu']['action'] == 'add_subscription') {
 
-				// Get the root of the api
-				$api_root = get_api_root($grant->access_token);
+				cvu_subscription_add( $_POST['coviu'], $options );
 
-				$deleted = delete_subscription_from_list( $grant->access_token, $api_root, $subscriptionId );
-
-				// notify if deleted
-				if ($deleted) {
-					?><div class="updated"><p><strong><?php printf(__("Deleted subscription %s.", "Deleted subscription %s.", $subscriptionId, 'coviu-video'), $subscriptionId); ?></strong></p></div><?php
-				} else {
-					?><div class="error"><p><strong><?php echo __("Can't delete a subscription that doesn't exist.", 'coviu-video'); ?></strong></p></div><?php
-				}
 			}
 		}
 	}
@@ -141,101 +131,144 @@ function cvu_settings_page() {
 	<div class="wrap">
 		<h2><?php _e('Coviu Video Settings', 'coviu-video'); ?></h2>
 
+		<!-- DISPLAY CREDENTIALS FORM -->
 		<h3><?php _e('Credentials', 'coviu-video'); ?></h3>
 		<p>
 			To use Coviu Video Conferencing, you need a <a href="https://www.coviu.com/developer/" target="_blank">developer account</a> and credentials for accessing the API.
 		</p>
 
-		<form id="credentials" method="post" action="<?php echo $_SERVER["REQUEST_URI"]; ?>">
-			<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
-			<input type="hidden" name="coviu[action]" value="credentials" />
+		<?php
+			cvu_credentials_form( $_SERVER["REQUEST_URI"], $options );
+		?>
 
-			<p>
-				<?php _e('API Key:', 'coviu-video'); ?>
-				<input type="text" name="coviu[api_key]" value="<?php echo $options->api_key ?>"/>
-			</p>
-			<p>
-				<?php _e('Secret Key:', 'coviu-video'); ?>
-				<input type="text" name="coviu[api_key_secret]" value="<?php echo $options->api_key_secret ?>"/>
-			</p>
-			<p class="submit">
-				<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add credentials', 'coviu-video'); ?>" />
-			</p>
-		</form>
-
-
+		<!-- DISPLAY SUBSCRIPTIONS LIST -->
 		<?php
 		if ($options->api_key != '' && $options->api_key_secret != '') {
 			?>
 
 			<h3><?php _e('Subscriptions', 'coviu-video'); ?></h3>
-			<p>List of active subscriptions.</p>
-
-			<script type="text/javascript">
-				function delete_subscription(subscription_id) {
-					console.log(jQuery('#subscription_id'));
-					jQuery('#subscription_id').val(subscription_id);
-					var confirmtext = <?php echo '"'. sprintf(__('Are you sure you want to remove subscription %s?', 'coviu-video'), '"+ subscription_id +"') .'"'; ?>;
-					if (!confirm(confirmtext)) {
-							return false;
-					}
-					jQuery('#delete_subscription').submit();
-				}
-			</script>
-
-			<form id="delete_subscription" method="post" action="<?php echo $_SERVER["REQUEST_URI"] ?>">
-				<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
-				<input type="hidden" name="coviu[action]" value="delete_subscription" />
-				<input type="hidden" name="coviu[subscription_id]" id="subscription_id"/>
-
-				<style>
-					#subscription_list tbody tr:nth-of-type(even) {background-color: white;}
-					#subscription_list th {
-						background-color:#0085ba;
-						font-weight:bold;
-						color:#fff;
-						padding: 0 5px;
-					}
-					#subscription_list tbody tr td:nth-of-type(1) {font-weight: bold;}
-				</style>
-
-				<table id="subscription_list">
-				<thead>
-					<tr>
-						<th>Subscription ID</th>
-						<th>Name</th>
-						<th>Email</th>
-						<th>Reference</th>
-						<th>Action</th>
-					</tr>
-				</thead>
-				<tbody>
-				<?php
-					// Recover an access token
-					$grant = get_access_token( $options->api_key, $options->api_key_secret );
-
-					// Get the root of the api
-					$api_root = get_api_root($grant->access_token);
-
-					// Get the first page of subscriptions
-					$subscriptions = get_subscriptions( $grant->access_token, $api_root );
-
-					// print active subscriptions
-					for ($i=0, $c=count($subscriptions->content); $i<$c; $i++) {
-						if ($subscriptions->content[$i]->content->active) {
-							cvu_subscription_display( $subscriptions->content[$i] );
-						}
-					}
-				?>
-				</tbody>
-				</table>
-			</form>
+			<h4>Add a  subscription</h4>
 			<?php
+			cvu_subscription_form( $_SERVER["REQUEST_URI"] );
+			?>
+
+			<h4>List of active subscriptions</h4>
+			<?php
+			cvu_subscriptions_display( $_SERVER["REQUEST_URI"], $options );
 		}
 		?>
 	</div>
 	<?php
 
+}
+
+function cvu_credentials_form( $actionurl, $options ) {
+	?>
+	<form id="credentials" method="post" action="<?php echo $actionurl; ?>">
+		<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
+		<input type="hidden" name="coviu[action]" value="credentials" />
+
+		<p>
+			<?php _e('API Key:', 'coviu-video'); ?>
+			<input type="text" name="coviu[api_key]" value="<?php echo $options->api_key ?>"/>
+		</p>
+		<p>
+			<?php _e('Secret Key:', 'coviu-video'); ?>
+			<input type="text" name="coviu[api_key_secret]" value="<?php echo $options->api_key_secret ?>"/>
+		</p>
+		<p class="submit">
+			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add credentials', 'coviu-video'); ?>" />
+		</p>
+	</form>
+	<?php
+}
+
+function cvu_subscription_form( $actionurl ) {
+	?>
+	<form id="add_subscription" method="post" action="<?php echo $actionurl; ?>">
+		<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
+		<input type="hidden" name="coviu[action]" value="add_subscription" />
+
+		<p>
+			<?php _e('Reference:', 'coviu-video'); ?>
+			<input type="text" name="coviu[ref]" value="Subscriber reference"/>
+		</p>
+		<p>
+			<?php _e('Name:', 'coviu-video'); ?>
+			<input type="text" name="coviu[name]" value="Name of subscription owner"/>
+		</p>
+		<p>
+			<?php _e('Email:', 'coviu-video'); ?>
+			<input type="text" name="coviu[email]" value="Email of subscription owner"/>
+		</p>
+		<p class="submit">
+			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add subscription', 'coviu-video'); ?>" />
+		</p>
+	</form>
+	<?php
+}
+
+function cvu_subscriptions_display( $actionurl, $options ) {
+	?>
+	<script type="text/javascript">
+		function delete_subscription(subscription_id) {
+			jQuery('#subscription_id').val(subscription_id);
+			var confirmtext = <?php echo '"'. sprintf(__('Are you sure you want to remove subscription %s?', 'coviu-video'), '"+ subscription_id +"') .'"'; ?>;
+			if (!confirm(confirmtext)) {
+					return false;
+			}
+			jQuery('#delete_subscription').submit();
+		}
+	</script>
+
+	<form id="delete_subscription" method="post" action="<?php echo $actionurl; ?>">
+		<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
+		<input type="hidden" name="coviu[action]" value="delete_subscription" />
+		<input type="hidden" name="coviu[subscription_id]" id="subscription_id"/>
+
+		<style>
+			#subscription_list tbody tr:nth-of-type(even) {background-color: white;}
+			#subscription_list th {
+				background-color:#0085ba;
+				font-weight:bold;
+				color:#fff;
+				padding: 0 5px;
+			}
+			#subscription_list tbody tr td:nth-of-type(1) {font-weight: bold;}
+		</style>
+
+		<table id="subscription_list">
+		<thead>
+			<tr>
+				<th>Subscription ID</th>
+				<th>Name</th>
+				<th>Email</th>
+				<th>Reference</th>
+				<th>Action</th>
+			</tr>
+		</thead>
+		<tbody>
+		<?php
+			// Recover an access token
+			$grant = get_access_token( $options->api_key, $options->api_key_secret );
+
+			// Get the root of the api
+			$api_root = get_api_root($grant->access_token);
+
+			// Get the first page of subscriptions
+			$subscriptions = get_subscriptions( $grant->access_token, $api_root );
+
+			// print active subscriptions
+			for ($i=0, $c=count($subscriptions->content); $i<$c; $i++) {
+				if ($subscriptions->content[$i]->content->active) {
+					cvu_subscription_display( $subscriptions->content[$i] );
+				}
+			}
+		?>
+		</tbody>
+		</table>
+	</form>
+	<?php
 }
 
 function cvu_subscription_display( $subscription ) {
@@ -250,14 +283,36 @@ function cvu_subscription_display( $subscription ) {
 	<?php
 }
 
-  // Create a new subscription for one of your users
-/*
+function cvu_subscription_delete( $subscriptionId, $options ) {
+	// Recover an access token
+	$grant = get_access_token( $options->api_key, $options->api_key_secret );
+
+	// Get the root of the api
+	$api_root = get_api_root($grant->access_token);
+
+	// delete the subscription
+	$deleted = delete_subscription_from_list( $grant->access_token, $api_root, $subscriptionId );
+
+	// notify if deleted
+	if ($deleted) {
+		?><div class="updated"><p><strong><?php printf(__("Deleted subscription %s.", "Deleted subscription %s.", $subscriptionId, 'coviu-video'), $subscriptionId); ?></strong></p></div><?php
+	} else {
+		?><div class="error"><p><strong><?php echo __("Can't delete a subscription that doesn't exist.", 'coviu-video'); ?></strong></p></div><?php
+	}
+}
+
+function cvu_subscription_add( $post, $options ) {
+	// Recover an access token
+	$grant = get_access_token( $options->api_key, $options->api_key_secret );
+
+	// Get the root of the api
+	$api_root = get_api_root($grant->access_token);
+
+  // Create a new subscription
   $subscription = create_subscription( $grant->access_token,
                                        $api_root,
-                                       array('ref' => $subscription_ref->toString(),
-                                            'name' => $name,
-                                           'email' => $email
+                                       array('ref' => $post['ref'],
+                                            'name' => $post['name'],
+                                           'email' => $post['email']
                                        ) );
-
-  echo $subscription_ref;
-*/
+}
