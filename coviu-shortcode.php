@@ -26,11 +26,10 @@
  * - provide optional start and end time
  *
  * Set up a shortcode for coviu video URL for the guest:
- * [coviu-link-guest ref='xxx' sessionid='yyy' name='patient' email='patient@gmail.com']
+ * [coviu-link-guest ref='xxx' sessionid='yyy' name='patient']
  * - identify the owner by ref
  * - identify the session by sessionid
  * - provide a name for the guest
- * - provide an email for the guest
  */
 
 use Ramsey\Uuid\Uuid;
@@ -106,7 +105,6 @@ function cvu_shortcode_guest( $atts ){
     'ref'       => '',
     'sessionid' => '',
     'name'      => '',
-    'email'     => '',
     ), $atts));
 
   // Recover an access token
@@ -122,7 +120,6 @@ function cvu_shortcode_guest( $atts ){
       'ref'   => $ref,
       'sid'   => $sessionid,
       'img'   => 'http://www.fillmurray.com/200/300',
-      'email' => $email,
       'rle'   => 'owner',
       'rtn'   => 'https://coviu.com',
       'nbf'   => time(),
