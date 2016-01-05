@@ -152,7 +152,7 @@ function get_subscription_by_ref( $access_token, $api_root, $ref) {
 	return null;
 }
 
-function get_sessions( $access_token, $api_root, $subscription ) {
+function get_sessions( $access_token, $api_root, $subscriptionId ) {
 	global $endpoint;
 
 	// Get the first page of sessions, leaving the API to choose how many to return.
@@ -164,9 +164,15 @@ function get_sessions( $access_token, $api_root, $subscription ) {
 	$url = $endpoint.$api_root->_links->sessions->href;
 
 	$response = Requests::get( $url, $header );
+	$sessions = json_decode($response->body);
 
-prettyprint($response);
-	return json_decode($response->body);
+	for ($i=0, $c=count($sessions->content); $i<$c; $i++) {
+		if ( $subscriptionId != $sessions->content[$i]->content->subscriptionId) {
+			unset( $sessions->content[$i] );
+		}
+	}
+
+	return $sessions;
 }
 
 function cvu_get_link( $access_token, $page ) {

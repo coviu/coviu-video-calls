@@ -279,7 +279,7 @@ function cvu_subscription_display( $subscription, $options ) {
 	$api_root = get_api_root($grant->access_token);
 
 	// Retrieve number of sessions
-	$sessions = get_sessions($grant->access_token, $api_root, $subscription);
+	$sessions = get_sessions($grant->access_token, $api_root, $subscription->content->subscriptionId);
 
 	?>
 	<tr>
