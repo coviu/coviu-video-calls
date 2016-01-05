@@ -1,4 +1,4 @@
-=== Coviu Video ===
+=== Coviu Video Calls ===
 Contributors: silviapfeiffer1
 Tags: Coviu, video calls, webrtc, call button, video, audio, chat, streaming, collaboration, peer-to-peer
 Requires at least: 3.0
@@ -27,7 +27,7 @@ Developer page: http://www.coviu.com/developer/
 To install the Coviu Video plugin simply:
 
 1. Unpack the downloaded zipped file
-2. Upload the "coviu-video" folder to your /wp-content/plugins directory
+2. Upload the "coviu-calls" folder to your /wp-content/plugins directory
 3. Log into Wordpress
 4. Go to the "Plugins" page
 5. Activate the Coviu Video Plugin
@@ -49,9 +49,24 @@ On mobile devices, Coviu works in the same browsers as on the desktop. Coviu als
 
 = What shortcodes are available? =
 
-The general shortcode is [coviu-video], which creates a button that links to a video conference overlay. You should provide a name and email address to the shortcode to associate the session with a person.
+The plugin provides two shortcodes.
 
-[coviu-video name='Dr. Who' email='drwho@gmail.com']
+[coviu-link-owner ref='xxx' sessionid='yyy' start='time' end='time']
+
+This creates a button that links to a video conference overlay for the owner of the video conference session.
+Provide the following details:
+ - identify the owner by ref
+ - provide a sessionid to allow referencing it
+ - provide optional start and end time
+
+[coviu-link-guest ref='xxx' sessionid='yyy' name='patient']
+
+This creates a link that links to a video conference overlay for a guest of the video conference session.
+Provide the following details:
+ - identify the owner by ref
+ - identify the session by sessionid
+ - provide a name for the guest
+
 
  
 

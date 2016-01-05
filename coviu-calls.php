@@ -1,14 +1,14 @@
 <?php
 /*
- * Plugin Name: Coviu Video
- * Plugin URI: http://wordpress.org/extend/plugins/coviu-video/
+ * Plugin Name: Coviu Video Calls
+ * Plugin URI: http://wordpress.org/extend/plugins/coviu-calls/
  * Description: Add Coviu video calling to your Website. 
  * Author: Silvia Pfeiffer
  * Version: 0.1
  * Author URI: http://www.coviu.com/
  * License: GPL2
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html.
- * Text Domain: coviu-video
+ * Text Domain: coviu-calls
  * Domain Path: /languages
  */
 
@@ -29,19 +29,19 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-	@package    coviu-video
+	@package    coviu-calls
 	@author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>
 	@copyright  Copyright 2015 Silvia Pfeiffer
 	@license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
 	@version    0.1
-	@link       http://wordpress.org/extend/plugins/coviu-video/
+	@link       http://wordpress.org/extend/plugins/coviu-calls/
 
 */
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
 
-require_once(WP_PLUGIN_DIR . '/coviu-video/coviu-auth.php');
-require_once(WP_PLUGIN_DIR . '/coviu-video/coviu-shortcode.php');
+require_once(WP_PLUGIN_DIR . '/coviu-calls/coviu-auth.php');
+require_once(WP_PLUGIN_DIR . '/coviu-calls/coviu-shortcode.php');
 
 /// ***  Set up and remove options for plugin *** ///
 
@@ -51,12 +51,12 @@ function cvu_setup_options() {
 	$options->api_key = '';
 	$options->api_key_secret = '';
 
-	add_option('coviu-video', $options);
+	add_option('coviu-calls', $options);
 }
 
 register_deactivation_hook( __FILE__, 'cvu_teardown_options' );
 function cvu_teardown_options() {
-	delete_option('coviu-video');   
+	delete_option('coviu-calls');
 }
 
 
@@ -65,7 +65,7 @@ function cvu_teardown_options() {
 add_action( 'admin_menu', 'cvu_admin_menu' );
 
 function cvu_admin_menu() {
-	add_options_page(__('Coviu Video Settings', 'coviu-video'), __('Coviu Video', 'coviu-video'), 'manage_options', __FILE__, 'cvu_settings_page');
+	add_options_page(__('Coviu Video Calls Settings', 'coviu-calls'), __('Coviu Calls', 'coviu-calls'), 'manage_options', __FILE__, 'cvu_settings_page');
 }
 
 function cvu_settings_page() {
@@ -74,7 +74,7 @@ function cvu_settings_page() {
 	}
 
 	// retrieve stored options
-	$options = get_option('coviu-video');
+	$options = get_option('coviu-calls');
 
 	// process form data
 	if( isset($_POST['coviu']) ) {
@@ -97,7 +97,7 @@ function cvu_settings_page() {
 				if ( !$_POST['coviu']['api_key'] || !$_POST['coviu']['api_key_secret'] ) {
 					?>
 					<div class="error">
-						<p><strong><?php echo __('Missing API credentials.', 'coviu-video'); ?></strong></p>
+						<p><strong><?php echo __('Missing API credentials.', 'coviu-calls'); ?></strong></p>
 					</div>
 					<?php
 				} else {
@@ -105,11 +105,11 @@ function cvu_settings_page() {
 					// updating credentials
 					$options->api_key    = $_POST['coviu']['api_key'];
 					$options->api_key_secret = $_POST['coviu']['api_key_secret'];
-					update_option('coviu-video', $options);
+					update_option('coviu-calls', $options);
 
 					?>
 					<div class="updated">
-						<p><strong><?php echo __('Stored credentials.', 'coviu-video'); ?></strong></p>
+						<p><strong><?php echo __('Stored credentials.', 'coviu-calls'); ?></strong></p>
 					</div>
 					<?php
 				}
@@ -129,10 +129,10 @@ function cvu_settings_page() {
 	// render the settings page
 	?>
 	<div class="wrap">
-		<h2><?php _e('Coviu Video Settings', 'coviu-video'); ?></h2>
+		<h2><?php _e('Coviu Video Calls Settings', 'coviu-calls'); ?></h2>
 
 		<!-- DISPLAY CREDENTIALS FORM -->
-		<h3><?php _e('Credentials', 'coviu-video'); ?></h3>
+		<h3><?php _e('Credentials', 'coviu-calls'); ?></h3>
 		<p>
 			To use Coviu Video Conferencing, you need a <a href="https://www.coviu.com/developer/" target="_blank">developer account</a> and credentials for accessing the API.
 		</p>
@@ -146,7 +146,7 @@ function cvu_settings_page() {
 		if ($options->api_key != '' && $options->api_key_secret != '') {
 			?>
 
-			<h3><?php _e('Subscriptions', 'coviu-video'); ?></h3>
+			<h3><?php _e('Subscriptions', 'coviu-calls'); ?></h3>
 			<h4>Add a  subscription</h4>
 			<?php
 			cvu_subscription_form( $_SERVER["REQUEST_URI"] );
@@ -169,15 +169,15 @@ function cvu_credentials_form( $actionurl, $options ) {
 		<input type="hidden" name="coviu[action]" value="credentials" />
 
 		<p>
-			<?php _e('API Key:', 'coviu-video'); ?>
+			<?php _e('API Key:', 'coviu-calls'); ?>
 			<input type="text" name="coviu[api_key]" value="<?php echo $options->api_key ?>"/>
 		</p>
 		<p>
-			<?php _e('Secret Key:', 'coviu-video'); ?>
+			<?php _e('Secret Key:', 'coviu-calls'); ?>
 			<input type="text" name="coviu[api_key_secret]" value="<?php echo $options->api_key_secret ?>"/>
 		</p>
 		<p class="submit">
-			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add credentials', 'coviu-video'); ?>" />
+			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add credentials', 'coviu-calls'); ?>" />
 		</p>
 	</form>
 	<?php
@@ -190,19 +190,19 @@ function cvu_subscription_form( $actionurl ) {
 		<input type="hidden" name="coviu[action]" value="add_subscription" />
 
 		<p>
-			<?php _e('Reference:', 'coviu-video'); ?>
+			<?php _e('Reference:', 'coviu-calls'); ?>
 			<input type="text" name="coviu[ref]" value="Subscriber reference"/>
 		</p>
 		<p>
-			<?php _e('Name:', 'coviu-video'); ?>
+			<?php _e('Name:', 'coviu-calls'); ?>
 			<input type="text" name="coviu[name]" value="Name of subscription owner"/>
 		</p>
 		<p>
-			<?php _e('Email:', 'coviu-video'); ?>
+			<?php _e('Email:', 'coviu-calls'); ?>
 			<input type="text" name="coviu[email]" value="Email of subscription owner"/>
 		</p>
 		<p class="submit">
-			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add subscription', 'coviu-video'); ?>" />
+			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add subscription', 'coviu-calls'); ?>" />
 		</p>
 	</form>
 	<?php
@@ -213,7 +213,7 @@ function cvu_subscriptions_display( $actionurl, $options ) {
 	<script type="text/javascript">
 		function delete_subscription(subscription_id) {
 			jQuery('#subscription_id').val(subscription_id);
-			var confirmtext = <?php echo '"'. sprintf(__('Are you sure you want to remove subscription %s?', 'coviu-video'), '"+ subscription_id +"') .'"'; ?>;
+			var confirmtext = <?php echo '"'. sprintf(__('Are you sure you want to remove subscription %s?', 'coviu-calls'), '"+ subscription_id +"') .'"'; ?>;
 			if (!confirm(confirmtext)) {
 					return false;
 			}
@@ -295,9 +295,9 @@ function cvu_subscription_delete( $subscriptionId, $options ) {
 
 	// notify if deleted
 	if ($deleted) {
-		?><div class="updated"><p><strong><?php printf(__("Deleted subscription %s.", "Deleted subscription %s.", $subscriptionId, 'coviu-video'), $subscriptionId); ?></strong></p></div><?php
+		?><div class="updated"><p><strong><?php printf(__("Deleted subscription %s.", "Deleted subscription %s.", $subscriptionId, 'coviu-calls'), $subscriptionId); ?></strong></p></div><?php
 	} else {
-		?><div class="error"><p><strong><?php echo __("Can't delete a subscription that doesn't exist.", 'coviu-video'); ?></strong></p></div><?php
+		?><div class="error"><p><strong><?php echo __("Can't delete a subscription that doesn't exist.", 'coviu-calls'); ?></strong></p></div><?php
 	}
 }
 

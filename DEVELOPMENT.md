@@ -19,7 +19,7 @@ Use github & git svn, see
 http://teleogistic.net/2011/05/revisiting-git-github-and-the-wordpress-org-plugin-repository/
 
 * edit readme.txt to bump up stable tag
-* edit coviu-video.php bump up stable tag there, too
+* edit coviu-calls.php bump up stable tag there, too
 * commit to github: git push origin master (possibly after merging a branch)
 * git rebase trunk (to rebase the svn trunk to current master)
 * git svn dcommit (to send commits to wordpress.org)
