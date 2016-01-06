@@ -211,43 +211,72 @@ function cvu_subscription_form( $actionurl ) {
 function cvu_subscriptions_display( $actionurl, $options ) {
 	?>
 	<script type="text/javascript">
+		var sessions = [];
 		function delete_subscription(subscription_id) {
 			jQuery('#subscription_id').val(subscription_id);
+			jQuery('#submit_action').val('delete_subscription');
 			var confirmtext = <?php echo '"'. sprintf(__('Are you sure you want to remove subscription %s?', 'coviu-calls'), '"+ subscription_id +"') .'"'; ?>;
 			if (!confirm(confirmtext)) {
 					return false;
 			}
 			jQuery('#delete_subscription').submit();
 		}
+
+		function count_sessions(subscription_id) {
+			var count = 0;
+			for (i=0; i < sessions.length; i++) {
+				if (subscription_id == sessions[i].content.subscriptionId) {
+					count ++;
+				}
+			}
+
+			return count;
+		}
+
+		function show_sessions(subscription_id) {
+			var sessionDiv = jQuery('#sessions').empty();
+			var divContent = "<h4>List of sessions for subscription "+subscription_id+"</h4>";
+			divContent += "<table class='cvu_list'>";
+			divContent += "<thead><tr>";
+			divContent += "<th>Session ID</th>";
+			divContent += "<th>Role</th>";
+			divContent += "<th>Name</th>";
+			divContent += "<th>Entry Time</th>";
+			divContent += "</tr></thead>";
+			divContent += "<tbody>";
+
+			for (i=0; i < sessions.length; i++) {
+				if (subscription_id == sessions[i].content.subscriptionId) {
+					divContent += "<tr>";
+					divContent += "<td>"+sessions[i].content.sessionId+"</td>";
+					divContent += "<td>"+sessions[i].content.role+"</td>";
+					divContent += "<td>"+sessions[i].content.name+"</td>";
+					divContent += "<td>"+Date(sessions[i].content.entryTime*1000)+"</td>";
+					divContent += "</tr>";
+				}
+			}
+			divContent += "</tbody></table>";
+			sessionDiv.append(divContent);
+
+		}
 	</script>
 
 	<form id="delete_subscription" method="post" action="<?php echo $actionurl; ?>">
 		<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
-		<input type="hidden" name="coviu[action]" value="delete_subscription" />
+		<input type="hidden" name="coviu[action]" value="delete_subscription"/>
 		<input type="hidden" name="coviu[subscription_id]" id="subscription_id"/>
 
 		<style>
-			#subscription_list tbody tr:nth-of-type(even) {background-color: white;}
-			#subscription_list th {
+			.cvu_list tbody tr:nth-of-type(even) {background-color: white;}
+			.cvu_list th {
 				background-color:#0085ba;
 				font-weight:bold;
 				color:#fff;
 				padding: 0 5px;
 			}
-			#subscription_list tbody tr td:nth-of-type(1) {font-weight: bold;}
+			.cvu_list tbody tr td:nth-of-type(1) {font-weight: bold;}
 		</style>
 
-		<table id="subscription_list">
-		<thead>
-			<tr>
-				<th>Reference</th>
-				<th>Name</th>
-				<th>Email</th>
-				<th>Sessions</th>
-				<th>Action</th>
-			</tr>
-		</thead>
-		<tbody>
 		<?php
 			// Recover an access token
 			$grant = get_access_token( $options->api_key, $options->api_key_secret );
@@ -258,6 +287,29 @@ function cvu_subscriptions_display( $actionurl, $options ) {
 			// Get the first page of subscriptions
 			$subscriptions = get_subscriptions( $grant->access_token, $api_root );
 
+			// Retrieve sessions for org
+			$sessions = get_sessions($grant->access_token, $api_root);
+
+			// Store sessions into JS
+			?>
+			<script type="text/javascript">
+			sessions = <?php echo json_encode($sessions->content); ?>;
+			</script>
+
+			<table class="cvu_list">
+			<thead>
+				<tr>
+					<th>Subscription ID</th>
+					<th>Reference</th>
+					<th>Name</th>
+					<th>Email</th>
+					<th>Sessions</th>
+					<th>Action</th>
+				</tr>
+			</thead>
+			<tbody>
+			<?php
+
 			// print active subscriptions
 			for ($i=0, $c=count($subscriptions->content); $i<$c; $i++) {
 				if ($subscriptions->content[$i]->content->active) {
@@ -267,26 +319,25 @@ function cvu_subscriptions_display( $actionurl, $options ) {
 		?>
 		</tbody>
 		</table>
+		<div id="sessions">
+		</div>
 	</form>
 	<?php
 }
 
 function cvu_subscription_display( $subscription, $options ) {
-	// Recover an access token
-	$grant = get_access_token( $options->api_key, $options->api_key_secret );
-
-	// Get the root of the api
-	$api_root = get_api_root($grant->access_token);
-
-	// Retrieve number of sessions
-	$sessions = get_sessions($grant->access_token, $api_root, $subscription->content->subscriptionId);
-
 	?>
 	<tr>
+		<td><?php echo $subscription->content->subscriptionId; ?></td>
 		<td><?php echo $subscription->content->remoteRef; ?></td>
 		<td><?php echo $subscription->content->name; ?></td>
 		<td><?php echo $subscription->content->email; ?></td>
-		<td><?php echo count($sessions->content); ?></td>
+		<td><a href="#sessions" onclick="show_sessions('<?php echo $subscription->content->subscriptionId; ?>');">
+		      <script type="text/javascript">
+		      document.write(count_sessions('<?php echo $subscription->content->subscriptionId; ?>'));
+		      </script>
+		    </a>
+		</td>
 		<td><a href="#" onclick="delete_subscription('<?php echo $subscription->content->subscriptionId; ?>');"><?php echo __('Delete') ?></a></td>
 	</tr>
 	<?php
