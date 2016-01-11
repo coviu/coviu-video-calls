@@ -20,13 +20,13 @@
 
 /*
  * Set up a shortcode for coviu video button for the owner:
- * [coviu-link-owner ref='xxx' sessionid='yyy' start='time' end='time']
+ * [coviu-link-owner ref='xxx' sessionid='yyy' start='time' end='time' embed]
  * - identify the owner by ref
  * - provide a sessionid to allow referencing it
  * - provide optional start and end time
  *
  * Set up a shortcode for coviu video URL for the guest:
- * [coviu-link-guest ref='xxx' sessionid='yyy' name='patient']
+ * [coviu-link-guest ref='xxx' sessionid='yyy' name='patient' embed]
  * - identify the owner by ref
  * - identify the session by sessionid
  * - provide a name for the guest
@@ -54,7 +54,11 @@ function cvu_shortcode_owner( $atts ){
 	extract(shortcode_atts(array(
 		'ref'       => '',
 		'sessionid' => '',
+		'start'     => '',
+		'end'       => '',
+		'embed'     => '0',
 		), $atts));
+	$embed = (bool) $embed;
 
 	// Recover an access token
 	$grant = get_access_token( $api_key, $api_key_secret );
@@ -85,7 +89,7 @@ function cvu_shortcode_owner( $atts ){
 
 	$owner = JWT::encode($token, $api_key_secret, 'HS256');
 
-	return cvu_shortcode_display('owner', $endpoint."/v1/session/".$owner);
+	return cvu_shortcode_display('owner', $endpoint."/v1/session/".$owner, $embed);
 }
 
 
@@ -105,6 +109,7 @@ function cvu_shortcode_guest( $atts ){
 		'ref'       => '',
 		'sessionid' => '',
 		'name'      => '',
+		'embed'     => '0',
 		), $atts));
 
 	// Recover an access token
@@ -128,27 +133,38 @@ function cvu_shortcode_guest( $atts ){
 
 	$guest = JWT::encode($token, $api_key_secret, 'HS256');
 
-	return cvu_shortcode_display('guest', $endpoint."/v1/session/".$guest);
+	return cvu_shortcode_display('guest', $endpoint."/v1/session/".$guest, $embed);
 }
 
-function cvu_shortcode_display( $role, $user_url ) {
-?>
-	<script language="javascript" type="text/javascript">
-	function popitup(url) {
-		newwindow = window.open(url, '_blank','height=640,width=1200');
-		if (window.focus) { newwindow.focus(); }
-		return false;
-	}
-	</script>
-	<?php
-	if ($role == 'owner') {
+function cvu_shortcode_display( $role, $user_url, $embed ) {
+	if ($embed == true) {
 		?>
-		<button><a href="<?php echo $user_url ?>" onclick="return popitup('<?php echo $user_url ?>')">Enter video call</a></button>
+		<iframe src="<?php echo $user_url ?>" width="100%" height="450px"></iframe>
 		<?php
 	} else {
 		?>
-		<a href="<?php echo $user_url ?>" onclick="return popitup('<?php echo $user_url ?>')">Guest video call link</a>
+		<script language="javascript" type="text/javascript">
+		function popitup(url) {
+			newwindow = window.open(url, '_blank','height=640,width=1200');
+			if (window.focus) { newwindow.focus(); }
+			return false;
+		}
+		</script>
 		<?php
+
+		if ($role == 'owner') {
+			?>
+			<p>
+			<button><a href="<?php echo $user_url ?>" onclick="return popitup('<?php echo $user_url ?>')">Enter video call</a></button>
+			</p>
+			<?php
+		} else {
+			?>
+			<p>
+			<a href="<?php echo $user_url ?>" onclick="return popitup('<?php echo $user_url ?>')">Guest video call link</a>
+			</p>
+			<?php
+		}
 	}
 }
 
