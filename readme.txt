@@ -29,7 +29,7 @@ Developer page: http://www.coviu.com/developer/
 To install the Coviu Video plugin simply:
 
 1. Unpack the downloaded zipped file
-2. Upload the "coviu-calls" folder to your /wp-content/plugins directory
+2. Upload the "coviu-video-calls" folder to your /wp-content/plugins directory
 3. Get a Coviu API key at http://www.coviu.com/developer/ or from support@coviu.com
 4. Log into Wordpress
 5. Go to the "Plugins" page

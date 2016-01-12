@@ -1,14 +1,14 @@
 <?php
 /*
  * Plugin Name: Coviu Video Calls
- * Plugin URI: http://wordpress.org/extend/plugins/coviu-calls/
+ * Plugin URI: http://wordpress.org/extend/plugins/coviu-video-calls/
  * Description: Add Coviu video calling to your Website. 
  * Author: Silvia Pfeiffer, NICTA
  * Version: 0.1
  * Author URI: http://www.coviu.com/
  * License: GPL2
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html.
- * Text Domain: coviu-calls
+ * Text Domain: coviu-video-calls
  * Domain Path: /languages
  */
 
@@ -30,12 +30,12 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-	@package    coviu-calls
+	@package    coviu-video-calls
 	@author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>
 	@copyright  Copyright 2015 Silvia Pfeiffer, NICTA
 	@license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
 	@version    0.1
-	@link       http://wordpress.org/extend/plugins/coviu-calls/
+	@link       http://wordpress.org/extend/plugins/coviu-video-calls/
 
 */
 /*
