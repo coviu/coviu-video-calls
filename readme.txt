@@ -21,8 +21,6 @@ You will be able to add a shortcode to your Wordpress pages that creates a butto
 
 Home page: http://www.coviu.com/
 
-Developer page: http://www.coviu.com/developer/
-
 
 == Installation ==
 
@@ -30,7 +28,7 @@ To install the Coviu Video plugin simply:
 
 1. Unpack the downloaded zipped file
 2. Upload the "coviu-video-calls" folder to your /wp-content/plugins directory
-3. Get a Coviu API key at http://www.coviu.com/developer/ or from support@coviu.com
+3. Get a Coviu API key from support@coviu.com
 4. Log into Wordpress
 5. Go to the "Plugins" page
 6. Activate the Coviu Video Calls plugin by entering API key credentials
@@ -53,7 +51,6 @@ The call is subsequently set up directly between all the participants. All audio
 = How do I get the API Keys for Coviu? =
 
 Email support@coviu.com for a set of API keys while the Coviu API is in alpha.
-Go to http://www.coviu.com/developer/ to sign up for a developer account.
 
 
 = Does it work on mobile devices? =
