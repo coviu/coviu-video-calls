@@ -3,7 +3,7 @@
  * Plugin Name: Coviu Video Calls
  * Plugin URI: http://wordpress.org/extend/plugins/coviu-calls/
  * Description: Add Coviu video calling to your Website. 
- * Author: Silvia Pfeiffer
+ * Author: Silvia Pfeiffer, NICTA
  * Version: 0.1
  * Author URI: http://www.coviu.com/
  * License: GPL2
@@ -14,6 +14,7 @@
 
 /*
 	Copyright 2015  Silvia Pfeiffer  (email : silviapfeiffer1@gmail.com)
+	Copyright 2015  National ICT Australia Limited (NICTA)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
@@ -31,12 +32,18 @@
 
 	@package    coviu-calls
 	@author     Silvia Pfeiffer <silviapfeiffer1@gmail.com>
-	@copyright  Copyright 2015 Silvia Pfeiffer
+	@copyright  Copyright 2015 Silvia Pfeiffer, NICTA
 	@license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
 	@version    0.1
 	@link       http://wordpress.org/extend/plugins/coviu-calls/
 
 */
+/*
+	For Documentation of the Coviu API, refer to:
+	https://github.com/coviu/coviu-api-python-demo
+*/
+
+
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
 
