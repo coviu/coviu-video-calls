@@ -43,7 +43,7 @@ function cvu_shortcode_owner( $atts ){
 	global $endpoint;
 
 	// retrieve stored api keys
-	$options  = get_option('coviu-calls');
+	$options  = get_option('coviu-video-calls');
 	$api_key = $options->api_key;
 	$api_key_secret = $options->api_key_secret;
 	if (!$api_key || !$api_key_secret) {
@@ -70,7 +70,7 @@ function cvu_shortcode_owner( $atts ){
 	$subscription = get_subscription_by_ref($grant->access_token, $api_root, $ref);
 
 	if (!$subscription) {
-		return sprintf(__("<p><i>ERROR: user reference \"%s\" not found.</i></p>", 'coviu-calls'), $ref);
+		return sprintf(__("<p><i>ERROR: user reference \"%s\" not found.</i></p>", 'coviu-video-calls'), $ref);
 	}
 
 	// Sign a jwt for the owner of the subscription. This lets them into the call straight away.
@@ -97,7 +97,7 @@ function cvu_shortcode_guest( $atts ){
 	global $endpoint;
 
 	// retrieve stored api keys
-	$options  = get_option('coviu-calls');
+	$options  = get_option('coviu-video-calls');
 	$api_key = $options->api_key;
 	$api_key_secret = $options->api_key_secret;
 	if (!$api_key || !$api_key_secret) {
