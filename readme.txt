@@ -41,7 +41,7 @@ To install the Coviu Video plugin simply:
 
 Coviu uses a new Web standard called WebRTC to set up video calls. This standard is currently natively supported in Chrome, Firefox and Opera browsers. Internet Edge and Safari support are in progress.
 
-WebRTC leapfrogs legacy video conferencing technology through better audio and video quality, lower latency, and fully secured connections.
+WebRTC leapfrogs legacy video conferencing technology through better audio and video quality, lower latency, and fully secured connections. Coviu adds additional security through its API.
 
 Coviu also uses Websockets to do the signalling necessary to make the video call participants aware of themselves.
 
@@ -56,16 +56,6 @@ Email support@coviu.com for a set of API keys while the Coviu API is in alpha.
 = Does it work on mobile devices? =
 
 On mobile devices, Coviu works in the same browsers as on the desktop. Coviu will also offer Android and iOS applications in which the video calls can be held. Contact support@coviu.com for more information.
-
-
-= What is a subscription? =
-
-Here are a couple of terms that we use and what they mean.
-
-* Session - A web (video, audio, data) call on Coviu through either a browser, native app, or mobile. Currently sessions may have up to 5 participants.
-* Subscription - A user who has arranged to have access to the system for the purposes of hosting sessions.
-* Session Owner - The user of a subscription who is hosting a session and who controls access to the session.
-* Session Guest - A user (person not subscribed) who has been granted access to a session by the session owner.
 
 
 = What shortcodes are available? =
@@ -91,6 +81,23 @@ Provide the following details:
  - switch between URL and iframe embedding via the embed flag
 
 
+= What is a subscription? =
+
+Here are a couple of terms that we use and what they mean.
+
+* Session - A web (video, audio, data) call on Coviu through either a browser, native app, or mobile. Currently sessions may have up to 5 participants.
+* Subscription - A user who has arranged to have access to the system for the purposes of hosting sessions.
+* Session Owner - The user of a subscription who is hosting a session and who controls access to the session.
+* Session Guest - A user (person not subscribed) who has been granted access to a session by the session owner.
+
+
+= How are a session owner and a session guest matched up? =
+
+The session owner is identified through a subscription, which is added by the API user. The API user can provide a custom reference to the subscription, which identifies the session owner to them. A session is identified by its ID and a reference to a subscription and can have a start and end date and time. A session guest is associated with a session through the session ID and the subscription reference, the latter of which identifies the session owner.
+
+For example, a doctor's clinic runs a wordpress site and gets an API key from Coviu. The Clinic can then create subscriptions for all of their doctors. These doctors can hold many sessions. A session is created by picking a session ID and associating it with a doctor (via the subscription reference). Now the session has an owner. Anyone else joining that session is a session guest.
+
+
 = Why should I use Coviu? =
 
 Coviu’s particular strength is in its focus on documents and data and its focus on keeping all the conversation and data shielded from external intrusion.
@@ -102,6 +109,8 @@ It allows the live sharing of documents and data and the live sharing of annotat
 This includes the sharing of a whiteboard to allow collaborative discussion and design.
 
 It also allows sharing of document camera input and thus the digitisation of paper documents.
+
+Coviu is extensible for other shared data. If you have a use cas that is not satisfied yet, contact support@coviu.com.
 
 New features are being added constantly - you can always try out Coviu with a free 'me' account at http://coviu.com/.
  

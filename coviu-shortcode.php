@@ -1,7 +1,9 @@
 <?php
 
 /*
-	Copyright 2015  Silvia Pfeiffer  (email : silviapfeiffer1@gmail.com)
+	Copyright 2015  Silvia Pfeiffer  (email : silvia.pfeiffer@coviu.com)
+	Copyright 2015  National ICT Australia Limited (NICTA)
+	Copyright 2015  Coviu
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License as published by
