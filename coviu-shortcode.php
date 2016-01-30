@@ -38,11 +38,34 @@ use Ramsey\Uuid\Uuid;
 use Firebase\JWT\JWT;
 
 /// ***   Short Codes   *** ///
-add_shortcode( 'coviu-link-owner', 'cvu_shortcode_owner' );
-add_shortcode( 'coviu-link-guest', 'cvu_shortcode_guest' );
+add_shortcode( 'coviu-link-owner', 'cvu_link_owner' );
+add_shortcode( 'coviu-url-owner', 'cvu_url_owner' );
 
-function cvu_shortcode_owner( $atts ){
+add_shortcode( 'coviu-link-guest', 'cvu_link_guest' );
+add_shortcode( 'coviu-url-guest', 'cvu_url_guest' );
+
+function cvu_link_owner( $atts ){
+	// get shortcode attributes
+	extract(shortcode_atts(array(
+		'embed'     => '0',
+		), $atts));
+	$embed = (bool) $embed;
+
+	$owner_url = cvu_url_owner( $atts );
+
+	return cvu_shortcode_display('owner', $owner_url, $embed);
+}
+
+function cvu_url_owner( $atts ){
 	global $endpoint;
+
+	// get shortcode attributes
+	extract(shortcode_atts(array(
+		'ref'       => '',
+		'sessionid' => '',
+		'start'     => '',
+		'end'       => '',
+		), $atts));
 
 	// retrieve stored api keys
 	$options  = get_option('coviu-video-calls');
@@ -51,16 +74,6 @@ function cvu_shortcode_owner( $atts ){
 	if (!$api_key || !$api_key_secret) {
 		return "Missing Coviu API keys";
 	}
-
-	// get shortcode attributes
-	extract(shortcode_atts(array(
-		'ref'       => '',
-		'sessionid' => '',
-		'start'     => '',
-		'end'       => '',
-		'embed'     => '0',
-		), $atts));
-	$embed = (bool) $embed;
 
 	// Recover an access token
 	$grant = get_access_token( $api_key, $api_key_secret );
@@ -91,11 +104,23 @@ function cvu_shortcode_owner( $atts ){
 
 	$owner = JWT::encode($token, $api_key_secret, 'HS256');
 
-	return cvu_shortcode_display('owner', $endpoint."/v1/session/".$owner, $embed);
+	return $endpoint."/v1/session/".$owner;
 }
 
 
-function cvu_shortcode_guest( $atts ){
+function cvu_link_guest( $atts ){
+	// get shortcode attributes
+	extract(shortcode_atts(array(
+		'embed'     => '0',
+		), $atts));
+	$embed = (bool) $embed;
+
+	$guest_url = cvu_url_guest( $atts );
+
+	return cvu_shortcode_display('guest', $guest_url, $embed);
+}
+
+function cvu_url_guest( $atts ){
 	global $endpoint;
 
 	// retrieve stored api keys
@@ -111,7 +136,6 @@ function cvu_shortcode_guest( $atts ){
 		'ref'       => '',
 		'sessionid' => '',
 		'name'      => '',
-		'embed'     => '0',
 		), $atts));
 
 	// Recover an access token
@@ -135,7 +159,7 @@ function cvu_shortcode_guest( $atts ){
 
 	$guest = JWT::encode($token, $api_key_secret, 'HS256');
 
-	return cvu_shortcode_display('guest', $endpoint."/v1/session/".$guest, $embed);
+	return $endpoint."/v1/session/".$guest;
 }
 
 function cvu_shortcode_display( $role, $user_url, $embed ) {
@@ -156,15 +180,11 @@ function cvu_shortcode_display( $role, $user_url, $embed ) {
 
 		if ($role == 'owner') {
 			?>
-			<p>
-			<button><a href="<?php echo $user_url ?>" onclick="return popitup('<?php echo $user_url ?>')">Enter video call</a></button>
-			</p>
+			<button type="button"><a href="<?php echo $user_url ?>" onclick="return popitup('<?php echo $user_url ?>')">Enter video call</a></button>
 			<?php
 		} else {
 			?>
-			<p>
 			<a href="<?php echo $user_url ?>" onclick="return popitup('<?php echo $user_url ?>')">Guest video call link</a>
-			</p>
 			<?php
 		}
 	}

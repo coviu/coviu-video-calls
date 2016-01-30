@@ -60,24 +60,35 @@ On mobile devices, Coviu works in the same browsers as on the desktop. Coviu wil
 
 = What shortcodes are available? =
 
-The plugin provides two shortcodes.
+The plugin provides four shortcodes.
 
-[coviu-link-owner ref='xxx' sessionid='yyy' start='time' end='time' embed='true']
+[coviu-url-owner ref='xxx' sessionid='yyy' start='time' end='time']
 
-This creates a button that links to a video conference overlay for the owner of the video conference session.
+This creates a URL to a video conference for the owner of the video conference session.
 Provide the following details:
  - identify the owner by ref
  - reference a session by id
  - provide optional start and end time
+
+[coviu-link-owner ref='xxx' sessionid='yyy' start='time' end='time' embed='true']
+
+Same as the coviu-url-owner, except the URL is behind a button to click on or embedded into the page.
+Provide the additional detail:
  - switch between URL and iframe embedding via the embed flag
 
-[coviu-link-guest ref='xxx' sessionid='yyy' name='patient' embed='false']
 
-This creates a link that links to a video conference overlay for a guest of the video conference session.
+[coviu-url-guest ref='xxx' sessionid='yyy' name='patient']
+
+This creates a URL to a video conference for a guest of the video conference session.
 Provide the following details:
  - identify the owner by ref
  - identify the session by sessionid
  - provide a name for the guest
+
+[coviu-link-guest ref='xxx' sessionid='yyy' name='patient' embed='false']
+
+Same as the coviu-url-guest, except the URL is behind a button to click on or embedded into the page.
+Privde the additional detail:
  - switch between URL and iframe embedding via the embed flag
 
 
