@@ -70,11 +70,12 @@ Provide the following details:
  - reference a session by id
  - provide optional start and end time
 
-[coviu-link-owner ref='xxx' sessionid='yyy' start='time' end='time' embed='true']
+[coviu-link-owner ref='xxx' sessionid='yyy' start='time' end='time' embed='true' color='white']
 
 Same as the coviu-url-owner, except the URL is behind a button to click on or embedded into the page.
-Provide the additional detail:
+Provide the additional details:
  - switch between URL and iframe embedding via the embed flag
+ - give your button text a specific CSS color via the color flag
 
 
 [coviu-url-guest ref='xxx' sessionid='yyy' name='patient']
@@ -85,11 +86,12 @@ Provide the following details:
  - identify the session by sessionid
  - provide a name for the guest
 
-[coviu-link-guest ref='xxx' sessionid='yyy' name='patient' embed='false']
+[coviu-link-guest ref='xxx' sessionid='yyy' name='patient' embed='false' color='black']
 
 Same as the coviu-url-guest, except the URL is behind a button to click on or embedded into the page.
-Privde the additional detail:
+Privde the additional details:
  - switch between URL and iframe embedding via the embed flag
+ - give your button text a specific CSS color via the color flag
 
 
 = What is a subscription? =

@@ -48,12 +48,13 @@ function cvu_link_owner( $atts ){
 	// get shortcode attributes
 	extract(shortcode_atts(array(
 		'embed'     => '0',
+		'color'     => ''
 		), $atts));
 	$embed = (bool) $embed;
 
 	$owner_url = cvu_url_owner( $atts );
 
-	return cvu_shortcode_display('owner', $owner_url, $embed);
+	return cvu_shortcode_display('owner', $owner_url, $embed, $color);
 }
 
 function cvu_url_owner( $atts ){
@@ -112,12 +113,13 @@ function cvu_link_guest( $atts ){
 	// get shortcode attributes
 	extract(shortcode_atts(array(
 		'embed'     => '0',
+		'color'     => ''
 		), $atts));
 	$embed = (bool) $embed;
 
 	$guest_url = cvu_url_guest( $atts );
 
-	return cvu_shortcode_display('guest', $guest_url, $embed);
+	return cvu_shortcode_display('guest', $guest_url, $embed, $color);
 }
 
 function cvu_url_guest( $atts ){
@@ -162,7 +164,7 @@ function cvu_url_guest( $atts ){
 	return $endpoint."/v1/session/".$guest;
 }
 
-function cvu_shortcode_display( $role, $user_url, $embed ) {
+function cvu_shortcode_display( $role, $user_url, $embed, $color ) {
 	if ($embed == true) {
 		?>
 		<iframe src="<?php echo $user_url ?>" width="100%" height="450px"></iframe>
@@ -180,11 +182,13 @@ function cvu_shortcode_display( $role, $user_url, $embed ) {
 
 		if ($role == 'owner') {
 			?>
-			<button type="button"><a href="<?php echo $user_url ?>" onclick="return popitup('<?php echo $user_url ?>')">Enter video call</a></button>
+			<button type="button">
+			<a href="<?php echo $user_url ?>"  style="color: <?php echo $color ?>" onclick="return popitup('<?php echo $user_url ?>')">Enter video call</a>
+			</button>
 			<?php
 		} else {
 			?>
-			<a href="<?php echo $user_url ?>" onclick="return popitup('<?php echo $user_url ?>')">Guest video call link</a>
+			<a href="<?php echo $user_url ?>" style="color: <?php echo $color ?>" onclick="return popitup('<?php echo $user_url ?>')">Guest video call link</a>
 			<?php
 		}
 	}
