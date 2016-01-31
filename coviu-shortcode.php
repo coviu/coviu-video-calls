@@ -153,7 +153,7 @@ function cvu_url_guest( $atts ){
 			'ref'   => $ref,
 			'sid'   => $sessionid,
 			'img'   => 'http://www.fillmurray.com/200/300',
-			'rle'   => 'owner',
+			'rle'   => 'guest',
 			'rtn'   => 'https://coviu.com',
 			'nbf'   => time(),
 			'exp'   => time() + 60*60
