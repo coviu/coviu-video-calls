@@ -114,6 +114,8 @@ function create_subscription( $access_token, $api_root, $body ) {
 function get_subscriptions( $access_token, $api_root) {
 	global $endpoint;
 
+	// TODO(sp): should get all the subscriptions and ignore deleted ones.
+
 	// Get the first page of subscriptions, leaving the API to choose how many to return.
 	$auth_header = build_oauth2_auth_header( $access_token );
 	$header = array();
