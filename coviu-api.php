@@ -22,7 +22,7 @@
 // authentication helper routines for JWT and oauth2 with the Coviu API
 
 
-require_once('vendor/autoload.php');
+require_once dirname(__DIR__).'/coviu-video-calls/vendor/autoload.php';
 
 use Ramsey\Uuid\Uuid;
 use Firebase\JWT\JWT;
