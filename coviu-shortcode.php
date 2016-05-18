@@ -99,7 +99,7 @@ function cvu_url_owner( $atts ){
 			'email' => $subscription->content->email,
 			'rle'   => 'owner',
 			'rtn'   => 'https://coviu.com',
-			'nbf'   => time(),
+			'nbf'   => time() - 5*60,
 			'exp'   => time() + 60*60
 	);
 
@@ -155,7 +155,7 @@ function cvu_url_guest( $atts ){
 			'img'   => 'http://www.fillmurray.com/200/300',
 			'rle'   => 'guest',
 			'rtn'   => 'https://coviu.com',
-			'nbf'   => time(),
+			'nbf'   => time() - 5*60,
 			'exp'   => time() + 60*60
 	);
 
