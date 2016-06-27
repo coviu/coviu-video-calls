@@ -48,7 +48,6 @@
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
 
-require_once(WP_PLUGIN_DIR . '/coviu-video-calls/coviu-api.php');
 require_once(WP_PLUGIN_DIR . '/coviu-video-calls/coviu-shortcode.php');
 
 /// ***  Set up and remove options for plugin *** ///
@@ -122,14 +121,6 @@ function cvu_settings_page() {
 					<?php
 				}
 
-			} elseif ($_POST['coviu']['action'] == 'delete_subscription') {
-
-				cvu_subscription_delete( $_POST['coviu']['subscription_id'], $options );
-
-			} elseif ($_POST['coviu']['action'] == 'add_subscription') {
-
-				cvu_subscription_add( $_POST['coviu'], $options );
-
 			}
 		}
 	}
@@ -142,27 +133,27 @@ function cvu_settings_page() {
 		<!-- DISPLAY CREDENTIALS FORM -->
 		<h3><?php _e('Credentials', 'coviu-video-calls'); ?></h3>
 		<p>
-			To use Coviu Video Conferencing, you need a <a href="https://www.coviu.com/developer/" target="_blank">developer account</a> and credentials for accessing the API.
+			To use Coviu Video Calls, you need a <a href="https://www.coviu.com/developer/" target="_blank">developer account</a> and credentials for accessing the API.
 		</p>
 
 		<?php
 			cvu_credentials_form( $_SERVER["REQUEST_URI"], $options );
 		?>
 
-		<!-- DISPLAY SUBSCRIPTIONS LIST -->
+		<!-- DISPLAY SESSION LIST -->
 		<?php
 		if ($options->api_key != '' && $options->api_key_secret != '') {
 			?>
 
-			<h3><?php _e('Subscriptions', 'coviu-video-calls'); ?></h3>
-			<h4>Add a  subscription</h4>
+			<h3><?php _e('Sessions', 'coviu-video-calls'); ?></h3>
+			<h4>Add a  session</h4>
 			<?php
-			cvu_subscription_form( $_SERVER["REQUEST_URI"] );
+			cvu_session_form( $_SERVER["REQUEST_URI"] );
 			?>
 
-			<h4>List of active subscriptions</h4>
+			<h4>List of active sessions</h4>
 			<?php
-			cvu_subscriptions_display( $_SERVER["REQUEST_URI"], $options );
+			cvu_sessions_display( $_SERVER["REQUEST_URI"], $options );
 		}
 		?>
 	</div>
@@ -191,49 +182,53 @@ function cvu_credentials_form( $actionurl, $options ) {
 	<?php
 }
 
-function cvu_subscription_form( $actionurl ) {
+function cvu_session_form( $actionurl ) {
 	?>
-	<form id="add_subscription" method="post" action="<?php echo $actionurl; ?>">
+	<form id="add_session" method="post" action="<?php echo $actionurl; ?>">
 		<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
-		<input type="hidden" name="coviu[action]" value="add_subscription" />
+		<input type="hidden" name="coviu[action]" value="add_session" />
 
 		<p>
-			<?php _e('Reference:', 'coviu-video-calls'); ?>
-			<input type="text" name="coviu[ref]" value="Subscriber reference"/>
+			<?php _e('Description:', 'coviu-video-calls'); ?>
+			<input type="text" name="coviu[name]" value="Description of session"/>
 		</p>
 		<p>
-			<?php _e('Name:', 'coviu-video-calls'); ?>
-			<input type="text" name="coviu[name]" value="Name of subscription owner"/>
+			<?php _e('Date:', 'coviu-video-calls'); ?>
+			<input type="date" name="coviu[date]" value="Date of session"/>
 		</p>
 		<p>
-			<?php _e('Email:', 'coviu-video-calls'); ?>
-			<input type="text" name="coviu[email]" value="Email of subscription owner"/>
+			<?php _e('Start time:', 'coviu-video-calls'); ?>
+			<input type="time" name="coviu[start]" value="Start time of session"/>
+		</p>
+		<p>
+			<?php _e('End time:', 'coviu-video-calls'); ?>
+			<input type="time" name="coviu[end]" value="End time of session"/>
 		</p>
 		<p class="submit">
-			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add subscription', 'coviu-video-calls'); ?>" />
+			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add session', 'coviu-video-calls'); ?>" />
 		</p>
 	</form>
 	<?php
 }
 
-function cvu_subscriptions_display( $actionurl, $options ) {
+function cvu_sessions_display( $actionurl, $options ) {
 	?>
 	<script type="text/javascript">
 		var sessions = [];
-		function delete_subscription(subscription_id) {
-			jQuery('#subscription_id').val(subscription_id);
-			jQuery('#submit_action').val('delete_subscription');
-			var confirmtext = <?php echo '"'. sprintf(__('Are you sure you want to remove subscription %s?', 'coviu-video-calls'), '"+ subscription_id +"') .'"'; ?>;
+		function delete_session(session_id) {
+			jQuery('#session_id').val(session_id);
+			jQuery('#submit_action').val('delete_session');
+			var confirmtext = <?php echo '"'. sprintf(__('Are you sure you want to remove session %s?', 'coviu-video-calls'), '"+ session_id +"') .'"'; ?>;
 			if (!confirm(confirmtext)) {
 					return false;
 			}
-			jQuery('#delete_subscription').submit();
+			jQuery('#delete_session').submit();
 		}
 
-		function count_sessions(subscription_id) {
+		function count_sessions(session_id) {
 			var count = 0;
 			for (i=0; i < sessions.length; i++) {
-				if (subscription_id == sessions[i].content.subscriptionId) {
+				if (session_id == sessions[i].content.session_id) {
 					count ++;
 				}
 			}
@@ -241,25 +236,25 @@ function cvu_subscriptions_display( $actionurl, $options ) {
 			return count;
 		}
 
-		function show_sessions(subscription_id) {
+		function show_sessions(session_id) {
 			var sessionDiv = jQuery('#sessions').empty();
-			var divContent = "<h4>List of sessions for subscription "+subscription_id+"</h4>";
+			var divContent = "<h4>List of sessions for session "+session_id+"</h4>";
 			divContent += "<table class='cvu_list'>";
 			divContent += "<thead><tr>";
 			divContent += "<th>Session ID</th>";
-			divContent += "<th>Role</th>";
-			divContent += "<th>Name</th>";
-			divContent += "<th>Entry Time</th>";
+			divContent += "<th>Description</th>";
+			divContent += "<th>Start time</th>";
+			divContent += "<th>End time</th>";
 			divContent += "</tr></thead>";
 			divContent += "<tbody>";
 
 			for (i=0; i < sessions.length; i++) {
-				if (subscription_id == sessions[i].content.subscriptionId) {
+				if (session_id == sessions[i].content.session_id) {
 					divContent += "<tr>";
-					divContent += "<td>"+sessions[i].content.sessionId+"</td>";
-					divContent += "<td>"+sessions[i].content.role+"</td>";
+					divContent += "<td>"+sessions[i].content.session_id+"</td>";
 					divContent += "<td>"+sessions[i].content.name+"</td>";
-					divContent += "<td>"+Date(sessions[i].content.entryTime*1000)+"</td>";
+					divContent += "<td>"+sessions[i].content.start_time+"</td>";
+					divContent += "<td>"+sessions[i].content.end_time+"</td>";
 					divContent += "</tr>";
 				}
 			}
@@ -269,10 +264,10 @@ function cvu_subscriptions_display( $actionurl, $options ) {
 		}
 	</script>
 
-	<form id="delete_subscription" method="post" action="<?php echo $actionurl; ?>">
+	<form id="delete_session" method="post" action="<?php echo $actionurl; ?>">
 		<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
-		<input type="hidden" name="coviu[action]" value="delete_subscription"/>
-		<input type="hidden" name="coviu[subscription_id]" id="subscription_id"/>
+		<input type="hidden" name="coviu[action]" value="delete_session"/>
+		<input type="hidden" name="coviu[session_id]" id="session_id"/>
 
 		<style>
 			.cvu_list tbody tr:nth-of-type(even) {background-color: white;}
@@ -286,17 +281,11 @@ function cvu_subscriptions_display( $actionurl, $options ) {
 		</style>
 
 		<?php
-			// Recover an access token
-			$grant = get_access_token( $options->api_key, $options->api_key_secret );
+			// Recover coviu
+			$coviu = new Coviu($options->api_key, $options->api_key_secret);
 
-			// Get the root of the api
-			$api_root = get_api_root($grant->access_token);
-
-			// Get the first page of subscriptions
-			$subscriptions = get_subscriptions( $grant->access_token, $api_root );
-
-			// Retrieve sessions for org
-			$sessions = get_sessions($grant->access_token, $api_root);
+			// Get the first page of sessions
+			$sessions = $coviu->sessions->getSessions();
 
 			// Store sessions into JS
 			?>
@@ -307,7 +296,7 @@ function cvu_subscriptions_display( $actionurl, $options ) {
 			<table class="cvu_list">
 			<thead>
 				<tr>
-					<th>Subscription ID</th>
+					<th>session ID</th>
 					<th>Reference</th>
 					<th>Name</th>
 					<th>Email</th>
@@ -318,10 +307,10 @@ function cvu_subscriptions_display( $actionurl, $options ) {
 			<tbody>
 			<?php
 
-			// print active subscriptions
-			for ($i=0, $c=count($subscriptions->content); $i<$c; $i++) {
-				if ($subscriptions->content[$i]->content->active) {
-					cvu_subscription_display( $subscriptions->content[$i], $options );
+			// print active sessions
+			for ($i=0, $c=count($sessions->content); $i<$c; $i++) {
+				if ($sessions->content[$i]->content->active) {
+					cvu_session_display( $sessions->content[$i], $options );
 				}
 			}
 		?>
@@ -333,52 +322,13 @@ function cvu_subscriptions_display( $actionurl, $options ) {
 	<?php
 }
 
-function cvu_subscription_display( $subscription, $options ) {
-	?>
-	<tr>
-		<td><?php echo $subscription->content->subscriptionId; ?></td>
-		<td><?php echo $subscription->content->remoteRef; ?></td>
-		<td><?php echo $subscription->content->name; ?></td>
-		<td><?php echo $subscription->content->email; ?></td>
-		<td><a href="#sessions" onclick="show_sessions('<?php echo $subscription->content->subscriptionId; ?>');">
-		      <script type="text/javascript">
-		      document.write(count_sessions('<?php echo $subscription->content->subscriptionId; ?>'));
-		      </script>
-		    </a>
-		</td>
-		<td><a href="#" onclick="delete_subscription('<?php echo $subscription->content->subscriptionId; ?>');"><?php echo __('Delete') ?></a></td>
-	</tr>
-	<?php
-}
 
-function cvu_subscription_delete( $subscriptionId, $options ) {
-	// Recover an access token
-	$grant = get_access_token( $options->api_key, $options->api_key_secret );
+function cvu_participant_add( $post, $options ) {
+	// Initiate the API
+	$coviu = new Coviu( $options->api_key, $options->api_key_secret );
 
-	// Get the root of the api
-	$api_root = get_api_root($grant->access_token);
-
-	// delete the subscription
-	$deleted = delete_subscription( $grant->access_token, $api_root, $subscriptionId );
-
-	// notify if deleted
-	if ($deleted) {
-		?><div class="updated"><p><strong><?php printf(__("Deleted subscription %s.", "Deleted subscription %s.", $subscriptionId, 'coviu-video-calls'), $subscriptionId); ?></strong></p></div><?php
-	} else {
-		?><div class="error"><p><strong><?php echo __("Can't delete a subscription that doesn't exist.", 'coviu-video-calls'); ?></strong></p></div><?php
-	}
-}
-
-function cvu_subscription_add( $post, $options ) {
-	// Recover an access token
-	$grant = get_access_token( $options->api_key, $options->api_key_secret );
-
-	// Get the root of the api
-	$api_root = get_api_root($grant->access_token);
-
-	// Create a new subscription
-	$subscription = create_subscription( $grant->access_token,
-																			 $api_root,
+	// Create a new participant
+	$participant = create_participant( $coviu,
 																			 array('ref' => $post['ref'],
 																						'name' => $post['name'],
 																					 'email' => $post['email']

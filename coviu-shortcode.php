@@ -36,6 +36,7 @@
 
 use Ramsey\Uuid\Uuid;
 use Firebase\JWT\JWT;
+use Coviu\Api\Coviu;
 
 /// ***   Short Codes   *** ///
 add_shortcode( 'coviu-link-owner', 'cvu_link_owner' );
