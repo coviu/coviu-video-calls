@@ -34,9 +34,11 @@
  * - provide a name for the guest
  */
 
+require_once __DIR__.'/vendor/autoload.php';
+
 use Ramsey\Uuid\Uuid;
 use Firebase\JWT\JWT;
-use Coviu\Api\Coviu;
+use coviu\Api\Coviu;
 
 /// ***   Short Codes   *** ///
 add_shortcode( 'coviu-link-owner', 'cvu_link_owner' );

@@ -47,6 +47,8 @@
 
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 
+require_once __DIR__.'/vendor/autoload.php';
+use coviu\Api\Coviu;
 
 require_once(WP_PLUGIN_DIR . '/coviu-video-calls/coviu-shortcode.php');
 
@@ -172,7 +174,7 @@ function cvu_credentials_form( $actionurl, $options ) {
 			<input type="text" name="coviu[api_key]" value="<?php echo $options->api_key ?>"/>
 		</p>
 		<p>
-			<?php _e('Secret Key:', 'coviu-video-calls'); ?>
+			<?php _e('Password:', 'coviu-video-calls'); ?>
 			<input type="text" name="coviu[api_key_secret]" value="<?php echo $options->api_key_secret ?>"/>
 		</p>
 		<p class="submit">
@@ -225,43 +227,6 @@ function cvu_sessions_display( $actionurl, $options ) {
 			jQuery('#delete_session').submit();
 		}
 
-		function count_sessions(session_id) {
-			var count = 0;
-			for (i=0; i < sessions.length; i++) {
-				if (session_id == sessions[i].content.session_id) {
-					count ++;
-				}
-			}
-
-			return count;
-		}
-
-		function show_sessions(session_id) {
-			var sessionDiv = jQuery('#sessions').empty();
-			var divContent = "<h4>List of sessions for session "+session_id+"</h4>";
-			divContent += "<table class='cvu_list'>";
-			divContent += "<thead><tr>";
-			divContent += "<th>Session ID</th>";
-			divContent += "<th>Description</th>";
-			divContent += "<th>Start time</th>";
-			divContent += "<th>End time</th>";
-			divContent += "</tr></thead>";
-			divContent += "<tbody>";
-
-			for (i=0; i < sessions.length; i++) {
-				if (session_id == sessions[i].content.session_id) {
-					divContent += "<tr>";
-					divContent += "<td>"+sessions[i].content.session_id+"</td>";
-					divContent += "<td>"+sessions[i].content.name+"</td>";
-					divContent += "<td>"+sessions[i].content.start_time+"</td>";
-					divContent += "<td>"+sessions[i].content.end_time+"</td>";
-					divContent += "</tr>";
-				}
-			}
-			divContent += "</tbody></table>";
-			sessionDiv.append(divContent);
-
-		}
 	</script>
 
 	<form id="delete_session" method="post" action="<?php echo $actionurl; ?>">
@@ -286,32 +251,41 @@ function cvu_sessions_display( $actionurl, $options ) {
 
 			// Get the first page of sessions
 			$sessions = $coviu->sessions->getSessions();
+			$sessions = $sessions['content'];
+			//var_dump($sessions);
 
 			// Store sessions into JS
-			?>
+		?>
 			<script type="text/javascript">
-			sessions = <?php echo json_encode($sessions->content); ?>;
+			sessions = <?php echo json_encode($sessions); ?>;
+			//console.log(sessions);
 			</script>
 
 			<table class="cvu_list">
 			<thead>
 				<tr>
-					<th>session ID</th>
-					<th>Reference</th>
-					<th>Name</th>
-					<th>Email</th>
-					<th>Sessions</th>
-					<th>Action</th>
+					<th>Title</th>
+					<th>Start</th>
+					<th>End</th>
+					<th>Host</th>
+					<th>Guest</th>
 				</tr>
 			</thead>
 			<tbody>
 			<?php
 
 			// print active sessions
-			for ($i=0, $c=count($sessions->content); $i<$c; $i++) {
-				if ($sessions->content[$i]->content->active) {
-					cvu_session_display( $sessions->content[$i], $options );
+			for ($i=0, $c=count($sessions); $i<$c; $i++) {
+				$hosts = array();
+				$guests = array();
+				foreach ($sessions[$i]['participants'] as $participant) {
+					if ($participant['role'] == "HOST") {
+						array_push($hosts, $participant);
+					} else {
+						array_push($guests, $participant);
+					}
 				}
+				cvu_session_display( $sessions[$i] , $hosts, $guests);
 			}
 		?>
 		</tbody>
@@ -319,6 +293,26 @@ function cvu_sessions_display( $actionurl, $options ) {
 		<div id="sessions">
 		</div>
 	</form>
+	<?php
+}
+
+function cvu_session_display( $session , $hosts, $guests ) {
+	?>
+	<tr>
+		<td><?php echo $session['session_name']; ?></td>
+		<td><?php echo $session['start_time']; ?></td>
+		<td><?php echo $session['end_time']; ?></td>
+		<td><?php foreach($hosts as $host) { ?>
+				<a href="<?php echo $host['entry_url']; ?>"><?php echo $host['display_name']; ?>
+				</a>
+			<?php } ?>
+		</td>
+		<td><?php foreach($guests as $guest) { ?>
+				<a href="<?php echo $guest['entry_url']; ?>"><?php echo $guest['display_name']; ?>
+				</a>
+			<?php } ?>
+		</td>
+	</tr>
 	<?php
 }
 
