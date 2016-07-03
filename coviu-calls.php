@@ -72,9 +72,15 @@ function cvu_teardown_options() {
 /// ***   Admin Settings Page   *** ///
 
 add_action( 'admin_menu', 'cvu_admin_menu' );
+add_action( 'admin_enqueue_scripts', 'cvu_register_admin_scripts' );
 
 function cvu_admin_menu() {
 	add_options_page(__('Coviu Video Calls Settings', 'coviu-video-calls'), __('Coviu Calls', 'coviu-video-calls'), 'manage_options', __FILE__, 'cvu_settings_page');
+}
+
+function cvu_register_admin_scripts() {
+	wp_enqueue_style( 'jquery-ui-datepicker' , '//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css');
+	wp_enqueue_script( 'jquery-ui-datepicker' );
 }
 
 function cvu_settings_page() {
@@ -123,6 +129,14 @@ function cvu_settings_page() {
 					<?php
 				}
 
+			} elseif ($_POST['coviu']['action'] == 'delete_session') {
+
+				cvu_session_delete( $_POST['coviu']['session_id'], $options );
+
+			} elseif ($_POST['coviu']['action'] == 'add_session') {
+
+				cvu_session_add( $_POST['coviu'], $options );
+
 			}
 		}
 	}
@@ -147,13 +161,12 @@ function cvu_settings_page() {
 		if ($options->api_key != '' && $options->api_key_secret != '') {
 			?>
 
-			<h3><?php _e('Sessions', 'coviu-video-calls'); ?></h3>
-			<h4>Add a  session</h4>
+			<h3><?php _e('Add a  session', 'coviu-video-calls'); ?></h3>
 			<?php
 			cvu_session_form( $_SERVER["REQUEST_URI"] );
 			?>
 
-			<h4>List of active sessions</h4>
+			<h3><?php _e('List of sessions', 'coviu-video-calls'); ?></h3>
 			<?php
 			cvu_sessions_display( $_SERVER["REQUEST_URI"], $options );
 		}
@@ -186,6 +199,14 @@ function cvu_credentials_form( $actionurl, $options ) {
 
 function cvu_session_form( $actionurl ) {
 	?>
+	<script type="text/javascript">
+		jQuery(document).ready(function($){
+			$('#datepicker').datepicker({
+				dateFormat: "dd M yy"
+		  });
+		});
+	</script>
+
 	<form id="add_session" method="post" action="<?php echo $actionurl; ?>">
 		<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
 		<input type="hidden" name="coviu[action]" value="add_session" />
@@ -196,15 +217,15 @@ function cvu_session_form( $actionurl ) {
 		</p>
 		<p>
 			<?php _e('Date:', 'coviu-video-calls'); ?>
-			<input type="date" name="coviu[date]" value="Date of session"/>
+			<input id="datepicker" type="text" name="coviu[date]" value="<?php echo date('d M Y'); ?>" />
 		</p>
 		<p>
 			<?php _e('Start time:', 'coviu-video-calls'); ?>
-			<input type="time" name="coviu[start]" value="Start time of session"/>
+			<input type="time" name="coviu[start]" value="<?php echo date('H:i', time()); ?>" />
 		</p>
 		<p>
 			<?php _e('End time:', 'coviu-video-calls'); ?>
-			<input type="time" name="coviu[end]" value="End time of session"/>
+			<input type="time" name="coviu[end]" value="<?php echo date('H:i', time() + (60*60)); ?>" />
 		</p>
 		<p class="submit">
 			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add session', 'coviu-video-calls'); ?>" />
@@ -226,7 +247,6 @@ function cvu_sessions_display( $actionurl, $options ) {
 			}
 			jQuery('#delete_session').submit();
 		}
-
 	</script>
 
 	<form id="delete_session" method="post" action="<?php echo $actionurl; ?>">
@@ -264,11 +284,13 @@ function cvu_sessions_display( $actionurl, $options ) {
 			<table class="cvu_list">
 			<thead>
 				<tr>
-					<th>Title</th>
+					<th>ID</th>
+					<th>Description</th>
 					<th>Start</th>
 					<th>End</th>
 					<th>Host</th>
 					<th>Guest</th>
+					<th>Action</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -278,11 +300,13 @@ function cvu_sessions_display( $actionurl, $options ) {
 			for ($i=0, $c=count($sessions); $i<$c; $i++) {
 				$hosts = array();
 				$guests = array();
-				foreach ($sessions[$i]['participants'] as $participant) {
-					if ($participant['role'] == "HOST") {
-						array_push($hosts, $participant);
-					} else {
-						array_push($guests, $participant);
+				if (array_key_exists('participants', $sessions[$i])) {
+					foreach ($sessions[$i]['participants'] as $participant) {
+						if ($participant['role'] == "HOST") {
+							array_push($hosts, $participant);
+						} else {
+							array_push($guests, $participant);
+						}
 					}
 				}
 				cvu_session_display( $sessions[$i] , $hosts, $guests);
@@ -299,17 +323,29 @@ function cvu_sessions_display( $actionurl, $options ) {
 function cvu_session_display( $session , $hosts, $guests ) {
 	?>
 	<tr>
+		<td><?php echo substr($session['session_id'], 0, 5). " ... "; ?></td>
 		<td><?php echo $session['session_name']; ?></td>
 		<td><?php echo $session['start_time']; ?></td>
 		<td><?php echo $session['end_time']; ?></td>
 		<td><?php foreach($hosts as $host) { ?>
+			  <img src="<?php echo $host['picture']; ?>" width="30px"/>
 				<a href="<?php echo $host['entry_url']; ?>"><?php echo $host['display_name']; ?>
 				</a>
+				<br/>
 			<?php } ?>
 		</td>
 		<td><?php foreach($guests as $guest) { ?>
 				<a href="<?php echo $guest['entry_url']; ?>"><?php echo $guest['display_name']; ?>
 				</a>
+			<?php } ?>
+		</td>
+		<td>
+			<?php
+			$session_time = new \DateTime($session['start_time']);
+			$now = new \DateTime();
+			if ($session_time > $now) { ?>
+				<a href="#" onclick="delete_session('<?php echo $session['session_id']; ?>');"><?php echo __(
+'Cancel') ?></a></td>
 			<?php } ?>
 		</td>
 	</tr>
@@ -327,6 +363,40 @@ function cvu_participant_add( $post, $options ) {
 																						'name' => $post['name'],
 																					 'email' => $post['email']
 																			 ) );
+}
+
+function cvu_session_add( $post, $options ) {
+	// Recover coviu
+	$coviu = new Coviu($options->api_key, $options->api_key_secret);
+
+	// created date-time objects
+	$start = $post['date'] . ' ' . $post['start'];
+	$end = $post['date'] . ' ' . $post['end'];
+
+	// add the session
+	$session = array(
+	  'session_name' => $post['name'],
+	  'start_time' => (new \DateTime($start))->format(\DateTime::ATOM),
+	  'end_time' => (new \DateTime($end))->format(\DateTime::ATOM),
+	  'picture' => 'http://www.fillmurray.com/200/300'
+	);
+
+	$session = $coviu->sessions->createSession($session);
+}
+
+function cvu_session_delete( $session_id, $options ) {
+	// Recover coviu
+	$coviu = new Coviu($options->api_key, $options->api_key_secret);
+
+	// delete the subscription
+	$deleted = $coviu->sessions->deleteSession( $session_id );
+
+	// notify if deleted
+	if ($deleted) {
+		?><div class="updated"><p><strong><?php printf(__("Deleted session %s.", "Deleted session %s.", $session_id, 'coviu-video-calls'), $session_id); ?></strong></p></div><?php
+	} else {
+		?><div class="error"><p><strong><?php echo __("Can't delete a session that doesn't exist.", 'coviu-video-calls'); ?></strong></p></div><?php
+	}
 }
 
 function prettyprint($var) {
