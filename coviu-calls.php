@@ -161,7 +161,7 @@ function cvu_settings_page() {
 		if ($options->api_key != '' && $options->api_key_secret != '') {
 			?>
 
-			<h3><?php _e('Add a  session', 'coviu-video-calls'); ?></h3>
+			<h3><?php _e('Add a session', 'coviu-video-calls'); ?></h3>
 			<?php
 			cvu_session_form( $_SERVER["REQUEST_URI"] );
 			?>
@@ -245,13 +245,16 @@ function cvu_sessions_display( $actionurl, $options ) {
 			if (!confirm(confirmtext)) {
 					return false;
 			}
-			jQuery('#delete_session').submit();
+			jQuery('#edit_session').submit();
+		}
+		function add_participant(session_id, type) {
+			console.log("adding " + type + " to " + session_id);
 		}
 	</script>
 
-	<form id="delete_session" method="post" action="<?php echo $actionurl; ?>">
+	<form id="edit_session" method="post" action="<?php echo $actionurl; ?>">
 		<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
-		<input type="hidden" name="coviu[action]" value="delete_session"/>
+		<input type="hidden" name="coviu[action]" id="submit_action"/>
 		<input type="hidden" name="coviu[session_id]" id="session_id"/>
 
 		<style>
@@ -274,11 +277,12 @@ function cvu_sessions_display( $actionurl, $options ) {
 			$sessions = $sessions['content'];
 			//var_dump($sessions);
 
-			// Store sessions into JS
+			// for overlays
+			add_thickbox();
 		?>
 			<script type="text/javascript">
 			sessions = <?php echo json_encode($sessions); ?>;
-			//console.log(sessions);
+			console.log(sessions);
 			</script>
 
 			<table class="cvu_list">
@@ -372,12 +376,24 @@ function cvu_session_add( $post, $options ) {
 	// created date-time objects
 	$start = $post['date'] . ' ' . $post['start'];
 	$end = $post['date'] . ' ' . $post['end'];
+	$startObj = (new \DateTime($start));
+	$endObj = (new \DateTime($end));
+
+	// check dates
+	if ($endObj <= $startObj) {
+		?><div class="error"><p><strong><?php echo __("Error: Can't create a session that starts after it ends.", 'coviu-video-calls'); ?></strong></p></div><?php
+		return;
+	}
+	if ($startObj <= (new \DateTime(now))) {
+		?><div class="error"><p><strong><?php echo __("Error: Can't create a session in the past.", 'coviu-video-calls'); ?></strong></p></div><?php
+		return;
+	}
 
 	// add the session
 	$session = array(
 	  'session_name' => $post['name'],
-	  'start_time' => (new \DateTime($start))->format(\DateTime::ATOM),
-	  'end_time' => (new \DateTime($end))->format(\DateTime::ATOM),
+	  'start_time' => $startObj->format(\DateTime::ATOM),
+	  'end_time' => $endObj->format(\DateTime::ATOM),
 	  'picture' => 'http://www.fillmurray.com/200/300'
 	);
 
@@ -388,7 +404,7 @@ function cvu_session_delete( $session_id, $options ) {
 	// Recover coviu
 	$coviu = new Coviu($options->api_key, $options->api_key_secret);
 
-	// delete the subscription
+	// delete the session
 	$deleted = $coviu->sessions->deleteSession( $session_id );
 
 	// notify if deleted
