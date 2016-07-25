@@ -137,6 +137,10 @@ function cvu_settings_page() {
 
 				cvu_session_add( $_POST['coviu'], $options );
 
+			} elseif ($_POST['coviu']['action'] == 'add_participant') {
+
+				cvu_participant_add( $_POST['coviu'], $options );
+
 			}
 		}
 	}
@@ -203,7 +207,7 @@ function cvu_session_form( $actionurl ) {
 		jQuery(document).ready(function($){
 			$('#datepicker').datepicker({
 				dateFormat: "dd M yy"
-		  });
+			});
 		});
 	</script>
 
@@ -237,7 +241,29 @@ function cvu_session_form( $actionurl ) {
 function cvu_sessions_display( $actionurl, $options ) {
 	?>
 	<script type="text/javascript">
-		var sessions = [];
+		// set up thickbox function handling
+		jQuery(document).ready(function() {
+			jQuery('.thickbox_custom').click(function() {
+				// get params for thickbox form
+				var role = jQuery(this).data('role');
+				var session_id = jQuery(this).data('sessionid');
+
+				// set params in form
+				jQuery('#participant_form input#role').val(role);
+				jQuery('#participant_form input#session_id').val(session_id);
+				if (role == 'host') {
+					jQuery('#participant_form input#submit').val("<?php _e('Add host', 'coviu-video-calls'); ?>");
+				} else {
+					jQuery('#participant_form input#submit').val("<?php _e('Add guest', 'coviu-video-calls'); ?>");
+				}
+
+				// render thickbox
+				tb_show('Add ' + role + ' to session', '#TB_inline?height=170&width=400&inlineId=participant_form', false);
+				this.blur();
+				return false;
+			});
+		});
+
 		function delete_session(session_id) {
 			jQuery('#session_id').val(session_id);
 			jQuery('#submit_action').val('delete_session');
@@ -246,9 +272,6 @@ function cvu_sessions_display( $actionurl, $options ) {
 					return false;
 			}
 			jQuery('#edit_session').submit();
-		}
-		function add_participant(session_id, type) {
-			console.log("adding " + type + " to " + session_id);
 		}
 	</script>
 
@@ -281,6 +304,7 @@ function cvu_sessions_display( $actionurl, $options ) {
 			add_thickbox();
 		?>
 			<script type="text/javascript">
+			var sessions = [];
 			sessions = <?php echo json_encode($sessions); ?>;
 			console.log(sessions);
 			</script>
@@ -321,6 +345,26 @@ function cvu_sessions_display( $actionurl, $options ) {
 		<div id="sessions">
 		</div>
 	</form>
+
+	<!-- The overlay thickbox form -->
+	<div id="participant_form" style="display:none;">
+		<p>
+			<form id="add_participant" method="post" action="<?php echo $actionurl; ?>">
+				<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
+				<input type="hidden" name="coviu[action]" value="add_participant" />
+				<input type="hidden" name="coviu[session_id]" id="session_id" value=""/>
+				<input type="hidden" name="coviu[role]" id="role" value=""/>
+
+				<p>
+					<?php _e('Name:', 'coviu-video-calls'); ?>
+					<input type="text" name="coviu[participant_name]"/>
+				</p>
+				<p>
+					<input name="Submit" type="submit" class="button-primary" id="submit" value="" />
+				</p>
+			</form>
+		</p>
+	</div>
 	<?php
 }
 
@@ -329,24 +373,37 @@ function cvu_session_display( $session , $hosts, $guests ) {
 	<tr>
 		<td><?php echo substr($session['session_id'], 0, 5). " ... "; ?></td>
 		<td><?php echo $session['session_name']; ?></td>
-		<td><?php echo $session['start_time']; ?></td>
-		<td><?php echo $session['end_time']; ?></td>
-		<td><?php foreach($hosts as $host) { ?>
-			  <img src="<?php echo $host['picture']; ?>" width="30px"/>
+		<td><?php echo (new \DateTime($session['start_time']))->format('Y-m-d H:i'); ?></td>
+		<td><?php echo (new \DateTime($session['end_time']))->format('Y-m-d H:i'); ?></td>
+		<td>
+			<?php
+			$session_time = new \DateTime($session['start_time']);
+			$now = new \DateTime();
+			if ($session_time > $now) { ?>
+				<button type="button" class="thickbox_custom" data-role='host' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('+ Add', 'coviu-video-calls') ?></button><br/>
+			<?php } ?>
+
+			<?php foreach($hosts as $host) { ?>
+				<img src="<?php echo $host['picture']; ?>" width="30px"/>
 				<a href="<?php echo $host['entry_url']; ?>"><?php echo $host['display_name']; ?>
 				</a>
 				<br/>
 			<?php } ?>
 		</td>
-		<td><?php foreach($guests as $guest) { ?>
+		<td>
+			<?php
+			if ($session_time > $now) { ?>
+				<button type="button" class="thickbox_custom" data-role='guest' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('+ Add', 'coviu-video-calls') ?></button><br/>
+			<?php } ?>
+
+			<?php foreach($guests as $guest) { ?>
 				<a href="<?php echo $guest['entry_url']; ?>"><?php echo $guest['display_name']; ?>
 				</a>
+				<br/>
 			<?php } ?>
 		</td>
 		<td>
 			<?php
-			$session_time = new \DateTime($session['start_time']);
-			$now = new \DateTime();
 			if ($session_time > $now) { ?>
 				<a href="#" onclick="delete_session('<?php echo $session['session_id']; ?>');"><?php echo __(
 'Cancel') ?></a></td>
@@ -358,16 +415,21 @@ function cvu_session_display( $session , $hosts, $guests ) {
 
 
 function cvu_participant_add( $post, $options ) {
-	// Initiate the API
-	$coviu = new Coviu( $options->api_key, $options->api_key_secret );
+	// Recover coviu
+	$coviu = new Coviu($options->api_key, $options->api_key_secret);
 
-	// Create a new participant
-	$participant = create_participant( $coviu,
-																			 array('ref' => $post['ref'],
-																						'name' => $post['name'],
-																					 'email' => $post['email']
-																			 ) );
+	// put together a participant
+	$participant = array(
+	  'display_name' => $post['participant_name'],
+	  'role' => $post['role'],
+	  'picture' => 'http://fillmurray.com/200/300',
+	  'state' => 'test-state'
+	);
+
+	// add a host or guest participant
+  $added = $coviu->sessions->addParticipant ($post['session_id'], $participant);
 }
+
 
 function cvu_session_add( $post, $options ) {
 	// Recover coviu
@@ -376,29 +438,30 @@ function cvu_session_add( $post, $options ) {
 	// created date-time objects
 	$start = $post['date'] . ' ' . $post['start'];
 	$end = $post['date'] . ' ' . $post['end'];
-	$startObj = (new \DateTime($start));
-	$endObj = (new \DateTime($end));
+	$startObj = new \DateTime($start);
+	$endObj = new \DateTime($end);
 
 	// check dates
 	if ($endObj <= $startObj) {
 		?><div class="error"><p><strong><?php echo __("Error: Can't create a session that starts after it ends.", 'coviu-video-calls'); ?></strong></p></div><?php
 		return;
 	}
-	if ($startObj <= (new \DateTime(now))) {
+	if ($startObj <= (new \DateTime())) {
 		?><div class="error"><p><strong><?php echo __("Error: Can't create a session in the past.", 'coviu-video-calls'); ?></strong></p></div><?php
 		return;
 	}
 
 	// add the session
 	$session = array(
-	  'session_name' => $post['name'],
-	  'start_time' => $startObj->format(\DateTime::ATOM),
-	  'end_time' => $endObj->format(\DateTime::ATOM),
-	  'picture' => 'http://www.fillmurray.com/200/300'
+		'session_name' => $post['name'],
+		'start_time' => $startObj->format(\DateTime::ATOM),
+		'end_time' => $endObj->format(\DateTime::ATOM),
+		'picture' => 'http://www.fillmurray.com/200/300'
 	);
 
 	$session = $coviu->sessions->createSession($session);
 }
+
 
 function cvu_session_delete( $session_id, $options ) {
 	// Recover coviu
