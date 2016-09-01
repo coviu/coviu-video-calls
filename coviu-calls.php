@@ -72,15 +72,52 @@ function cvu_teardown_options() {
 /// ***   Admin Settings Page   *** ///
 
 add_action( 'admin_menu', 'cvu_admin_menu' );
+add_action( 'admin_menu', 'cvu_appointments_menu' );
 add_action( 'admin_enqueue_scripts', 'cvu_register_admin_scripts' );
 
 function cvu_admin_menu() {
 	add_options_page(__('Coviu Video Calls Settings', 'coviu-video-calls'), __('Coviu Calls', 'coviu-video-calls'), 'manage_options', __FILE__, 'cvu_settings_page');
 }
 
+function cvu_appointments_menu() {
+	$title = __('Coviu Appointments', 'coviu-appointments');
+	add_menu_page($title, 'Appointments', 'manage_options', 'coviu-appointments-menu', 'cvu_appointments_page', plugins_url('coviu-video-calls/images/icon.png'), 30);
+}
+
 function cvu_register_admin_scripts() {
 	wp_enqueue_style( 'jquery-ui-datepicker' , '//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css');
 	wp_enqueue_script( 'jquery-ui-datepicker' );
+}
+
+function cvu_appointments_page() {
+	if ( !current_user_can( 'manage_options' ) )  {
+		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
+	}
+
+	// retrieve stored options
+	$options = get_option('coviu-video-calls');
+
+	?>
+	<div class="wrap">
+		<h2><?php _e('Coviu Appointments', 'coviu-video-calls'); ?></h2>
+
+		<!-- DISPLAY SESSION LIST -->
+		<?php
+		if ($options->api_key != '' && $options->api_key_secret != '') {
+			?>
+
+			<h3><?php _e('Add a Appointments', 'coviu-video-calls'); ?></h3>
+			<?php
+			cvu_session_form( $_SERVER["REQUEST_URI"] );
+			?>
+
+			<h3><?php _e('List of Appointments', 'coviu-video-calls'); ?></h3>
+			<?php
+			cvu_sessions_display( $_SERVER["REQUEST_URI"], $options );
+		}
+		?>
+	</div>
+	<?php
 }
 
 function cvu_settings_page() {
@@ -158,22 +195,6 @@ function cvu_settings_page() {
 
 		<?php
 			cvu_credentials_form( $_SERVER["REQUEST_URI"], $options );
-		?>
-
-		<!-- DISPLAY SESSION LIST -->
-		<?php
-		if ($options->api_key != '' && $options->api_key_secret != '') {
-			?>
-
-			<h3><?php _e('Add a session', 'coviu-video-calls'); ?></h3>
-			<?php
-			cvu_session_form( $_SERVER["REQUEST_URI"] );
-			?>
-
-			<h3><?php _e('List of sessions', 'coviu-video-calls'); ?></h3>
-			<?php
-			cvu_sessions_display( $_SERVER["REQUEST_URI"], $options );
-		}
 		?>
 	</div>
 	<?php
