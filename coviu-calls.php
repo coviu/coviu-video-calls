@@ -216,7 +216,7 @@ function cvu_credentials_form( $actionurl, $options ) {
 			<input type="text" name="coviu[api_key_secret]" value="<?php echo $options->api_key_secret ?>"/>
 		</p>
 		<p class="submit">
-			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add credentials', 'coviu-video-calls'); ?>" />
+			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Update Credentials', 'coviu-video-calls'); ?>" />
 		</p>
 	</form>
 	<?php
@@ -238,7 +238,7 @@ function cvu_session_form( $actionurl ) {
 
 		<p>
 			<?php _e('Description:', 'coviu-video-calls'); ?>
-			<input type="text" name="coviu[name]" value="Description of session"/>
+			<input type="text" name="coviu[name]" value="Description of Appointment"/>
 		</p>
 		<p>
 			<?php _e('Date:', 'coviu-video-calls'); ?>
@@ -253,7 +253,7 @@ function cvu_session_form( $actionurl ) {
 			<input type="time" name="coviu[end]" value="<?php echo date('H:i', time() + (60*60)); ?>" />
 		</p>
 		<p class="submit">
-			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add session', 'coviu-video-calls'); ?>" />
+			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add Appointment', 'coviu-video-calls'); ?>" />
 		</p>
 	</form>
 	<?php
@@ -279,7 +279,7 @@ function cvu_sessions_display( $actionurl, $options ) {
 				}
 
 				// render thickbox
-				tb_show('Add ' + role + ' to session', '#TB_inline?height=170&width=400&inlineId=participant_form', false);
+				tb_show('Add ' + role + ' to Appointment', '#TB_inline?height=170&width=400&inlineId=participant_form', false);
 				this.blur();
 				return false;
 			});
@@ -288,7 +288,7 @@ function cvu_sessions_display( $actionurl, $options ) {
 		function delete_session(session_id) {
 			jQuery('#session_id').val(session_id);
 			jQuery('#submit_action').val('delete_session');
-			var confirmtext = <?php echo '"'. sprintf(__('Are you sure you want to remove session %s?', 'coviu-video-calls'), '"+ session_id +"') .'"'; ?>;
+			var confirmtext = <?php echo '"'. sprintf(__('Are you sure you want to remove Appointment %s?', 'coviu-video-calls'), '"+ session_id +"') .'"'; ?>;
 			if (!confirm(confirmtext)) {
 					return false;
 			}
@@ -464,11 +464,11 @@ function cvu_session_add( $post, $options ) {
 
 	// check dates
 	if ($endObj <= $startObj) {
-		?><div class="error"><p><strong><?php echo __("Error: Can't create a session that starts after it ends.", 'coviu-video-calls'); ?></strong></p></div><?php
+		?><div class="error"><p><strong><?php echo __("Error: Can't create an Appointment that starts after it ends.", 'coviu-video-calls'); ?></strong></p></div><?php
 		return;
 	}
 	if ($startObj <= (new \DateTime())) {
-		?><div class="error"><p><strong><?php echo __("Error: Can't create a session in the past.", 'coviu-video-calls'); ?></strong></p></div><?php
+		?><div class="error"><p><strong><?php echo __("Error: Can't create an Appointment in the past.", 'coviu-video-calls'); ?></strong></p></div><?php
 		return;
 	}
 
@@ -495,7 +495,7 @@ function cvu_session_delete( $session_id, $options ) {
 	if ($deleted) {
 		?><div class="updated"><p><strong><?php printf(__("Deleted session %s.", "Deleted session %s.", $session_id, 'coviu-video-calls'), $session_id); ?></strong></p></div><?php
 	} else {
-		?><div class="error"><p><strong><?php echo __("Can't delete a session that doesn't exist.", 'coviu-video-calls'); ?></strong></p></div><?php
+		?><div class="error"><p><strong><?php echo __("Can't delete an Appointment that doesn't exist.", 'coviu-video-calls'); ?></strong></p></div><?php
 	}
 }
 
