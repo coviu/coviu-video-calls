@@ -2,7 +2,7 @@
 /*
  * Plugin Name: Coviu Video Calls
  * Plugin URI: http://wordpress.org/extend/plugins/coviu-video-calls/
- * Description: Add Coviu video calling to your Website. 
+ * Description: Add Coviu video calling to your Website.
  * Author: Silvia Pfeiffer, NICTA, Coviu
  * Version: 0.1
  * Author URI: http://www.coviu.com/
@@ -67,7 +67,6 @@ register_deactivation_hook( __FILE__, 'cvu_teardown_options' );
 function cvu_teardown_options() {
 	delete_option('coviu-video-calls');
 }
-
 
 /// ***   Admin Settings Page   *** ///
 
@@ -233,7 +232,7 @@ function cvu_session_form( $actionurl ) {
 	<script type="text/javascript">
 		jQuery(document).ready(function($){
 			jQuery('#datepicker').datepicker({
-				dateFormat: "dd M yy"
+				dateFormat: "dd M yy",
 			});
 		});
 	</script>
@@ -335,9 +334,13 @@ function cvu_sessions_display( $actionurl, $options ) {
 			$sessions = $sessions['content'];
 			//var_dump($sessions);
 
+			date_default_timezone_set('GMT');
 			foreach ($sessions as $key => $session) {
-				$sessions[$key]['start_time'] = wp_get_datetime($session['start_time']);
-				$sessions[$key]['end_time'] = wp_get_datetime($session['end_time']);
+				$start_time = new DateTime($session['start_time']);
+				$end_time   = new DateTime($session['end_time']);
+
+				$sessions[$key]['start_time'] = $start_time->setTimezone(wp_get_datetimezone());
+				$sessions[$key]['end_time']   = $end_time->setTimezone(wp_get_datetimezone());
 			}
 
 			function cmp_by_time($session1, $session2) {
@@ -348,7 +351,7 @@ function cvu_sessions_display( $actionurl, $options ) {
 			$upcoming_split_index = 0;
 			$now = wp_get_datetime_now();
 			foreach ($sessions as $session) {
-				if ($now > $session['start_time']) break;
+				if ($now >= $session['start_time']) break;
 
 				$upcoming_split_index++;
 			}
@@ -487,26 +490,25 @@ function cvu_participant_add( $post, $options ) {
 
 	// put together a participant
 	$participant = array(
-	  'display_name' => $post['participant_name'],
-	  'role' => $post['role'],
-	  'picture' => 'http://fillmurray.com/200/300',
-	  'state' => 'test-state'
+		'display_name' => $post['participant_name'],
+		'role'         => $post['role'],
+		'picture'      => 'http://fillmurray.com/200/300',
+		'state'        => 'test-state'
 	);
 
 	// add a host or guest participant
-  $added = $coviu->sessions->addParticipant ($post['session_id'], $participant);
+	$added = $coviu->sessions->addParticipant ($post['session_id'], $participant);
 }
-
 
 function cvu_session_add( $post, $options ) {
 	// Recover coviu
 	$coviu = new Coviu($options->api_key, $options->api_key_secret);
 
 	// created date-time objects
-	$start = $post['date'] . ' ' . $post['start'];
-	$end = $post['date'] . ' ' . $post['end'];
+	$start    = $post['date'] . ' ' . $post['start'];
+	$end      = $post['date'] . ' ' . $post['end'];
 	$startObj = wp_get_datetime($start);
-	$endObj = wp_get_datetime($end);
+	$endObj   = wp_get_datetime($end);
 
 	// check dates
 	if ($endObj <= $startObj) {
@@ -526,15 +528,13 @@ function cvu_session_add( $post, $options ) {
 		// 'picture' => 'http://www.fillmurray.com/200/300',
 	);
 
-    try {
+	try {
 		$session = $coviu->sessions->createSession($session);
 	} catch (\Exception $e) {
 		?><div class="error"><p><strong><?php echo $e->getMessage(); ?></strong></p></div><?php
 		return;
 	}
-
 }
-
 
 function cvu_session_delete( $session_id, $options ) {
 	// Recover coviu
@@ -574,34 +574,34 @@ function wp_get_datetimezone() {
 }
 
 function wp_get_timezone_string() {
-    // if site timezone string exists, return it
-    if ( $timezone = get_option( 'timezone_string' ) ) {
-        return $timezone;
-    }
+	// if site timezone string exists, return it
+	if ( $timezone = get_option( 'timezone_string' ) ) {
+		return $timezone;
+	}
 
-    // get UTC offset, if it isn't set then return UTC
-    if ( 0 === ( $utc_offset = get_option( 'gmt_offset', 0 ) ) ) {
-        return 'UTC';
-    }
+	// get UTC offset, if it isn't set then return UTC
+	if ( 0 === ( $utc_offset = get_option( 'gmt_offset', 0 ) ) ) {
+		return 'UTC';
+	}
 
-    // adjust UTC offset from hours to seconds
-    $utc_offset *= 3600;
+	// adjust UTC offset from hours to seconds
+	$utc_offset *= 3600;
 
-    // attempt to guess the timezone string from the UTC offset
-    if ( $timezone = timezone_name_from_abbr( '', $utc_offset, 0 ) ) {
-        return $timezone;
-    }
+	// attempt to guess the timezone string from the UTC offset
+	if ( $timezone = timezone_name_from_abbr( '', $utc_offset, 0 ) ) {
+		return $timezone;
+	}
 
-    // last try, guess timezone string manually
-    $is_dst = date( 'I' );
+	// last try, guess timezone string manually
+	$is_dst = date( 'I' );
 
-    foreach ( timezone_abbreviations_list() as $abbr ) {
-        foreach ( $abbr as $city ) {
-            if ( $city['dst'] == $is_dst && $city['offset'] == $utc_offset )
-                return $city['timezone_id'];
-        }
-    }
+	foreach ( timezone_abbreviations_list() as $abbr ) {
+		foreach ( $abbr as $city ) {
+			if ( $city['dst'] == $is_dst && $city['offset'] == $utc_offset )
+				return $city['timezone_id'];
+		}
+	}
 
-    // fallback to UTC
-    return 'UTC';
+	// fallback to UTC
+	return 'UTC';
 }
