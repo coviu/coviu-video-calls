@@ -2,7 +2,7 @@
 /*
  * Plugin Name: Coviu Video Calls
  * Plugin URI: http://wordpress.org/extend/plugins/coviu-video-calls/
- * Description: Add Coviu video calling to your Website. 
+ * Description: Add Coviu video calling to your Website.
  * Author: Silvia Pfeiffer, NICTA, Coviu
  * Version: 0.1
  * Author URI: http://www.coviu.com/
@@ -335,9 +335,12 @@ function cvu_sessions_display( $actionurl, $options ) {
 			$sessions = $sessions['content'];
 			//var_dump($sessions);
 
+			date_default_timezone_set('GMT');
 			foreach ($sessions as $key => $session) {
-				$sessions[$key]['start_time'] = wp_get_datetime($session['start_time']);
-				$sessions[$key]['end_time'] = wp_get_datetime($session['end_time']);
+				$start_time = new DateTime($session['start_time']);
+				$sessions[$key]['start_time'] = $start_time->setTimezone(wp_get_datetimezone());
+				$end_time = new DateTime($session['end_time']);
+				$sessions[$key]['end_time'] = $end_time->setTimezone(wp_get_datetimezone());
 			}
 
 			function cmp_by_time($session1, $session2) {
@@ -348,7 +351,7 @@ function cvu_sessions_display( $actionurl, $options ) {
 			$upcoming_split_index = 0;
 			$now = wp_get_datetime_now();
 			foreach ($sessions as $session) {
-				if ($now > $session['start_time']) break;
+				if ($now >= $session['start_time']) break;
 
 				$upcoming_split_index++;
 			}
