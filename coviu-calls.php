@@ -131,7 +131,7 @@ function cvu_appointments_page() {
 		if ($options->api_key != '' && $options->api_key_secret != '') {
 			?>
 
-			<h2><?php _e('Add a Appointments', 'coviu-video-calls'); ?></h2>
+			<h2><?php _e('Add a Video Appointment', 'coviu-video-calls'); ?></h2>
 			<?php
 			cvu_session_form( $_SERVER["REQUEST_URI"] );
 			cvu_sessions_display( $_SERVER["REQUEST_URI"], $options );
@@ -244,7 +244,7 @@ function cvu_session_form( $actionurl ) {
 
 		<p>
 			<?php _e('Description:', 'coviu-video-calls'); ?>
-			<input type="text" name="coviu[name]" value="Description of Appointment"/>
+			<input type="text" name="coviu[name]" value="Description of Appointment" size="40"/>
 		</p>
 		<p>
 			<?php _e('Date:', 'coviu-video-calls'); ?>
@@ -389,7 +389,7 @@ function cvu_sessions_display( $actionurl, $options ) {
 	<?php
 }
 
-function cvu_session_table_header() {
+function cvu_session_table_header($title) {
 	?>
 		<thead>
 			<tr>
@@ -399,7 +399,9 @@ function cvu_session_table_header() {
 				<th>End</th>
 				<th>Host</th>
 				<th>Guest</th>
-				<th>Action</th>
+				<?php if (strpos($title, 'Upcoming') !== false ) { ?>
+					<th>Action</th>
+				<?php } ?>
 			</tr>
 		</thead>
 	<?php
@@ -409,7 +411,7 @@ function cvu_sessions_table($title, $sessions) {
 	?>
 		<h2> <?php echo $title; ?> </h2>
 		<table class="cvu_list">
-			<?php cvu_session_table_header(); ?>
+			<?php cvu_session_table_header($title); ?>
 			<tbody> <?php
 
 				foreach ($sessions as $session) {
@@ -433,6 +435,7 @@ function cvu_session_display($session) {
 			}
 		}
 	}
+	$now = wp_get_datetime_now();
 
 	?>
 	<tr>
@@ -443,7 +446,6 @@ function cvu_session_display($session) {
 		<td>
 			<?php
 			$session_time = $session['start_time'];
-			$now = wp_get_datetime_now();
 			if ($session_time > $now) { ?>
 				<button type="button" class="thickbox_custom" data-role='host' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('+ Add', 'coviu-video-calls') ?></button><br/>
 			<?php } ?>
@@ -467,13 +469,13 @@ function cvu_session_display($session) {
 				<br/>
 			<?php } ?>
 		</td>
-		<td>
-			<?php
-			if ($session_time > $now) { ?>
+		<?php
+		if ($session_time > $now) { ?>
+			<td>
 				<a href="#" onclick="delete_session('<?php echo $session['session_id']; ?>');"><?php echo __(
 'Cancel') ?></a></td>
-			<?php } ?>
-		</td>
+			</td>
+		<?php } ?>
 	</tr>
 	<?php
 }
