@@ -526,7 +526,13 @@ function cvu_session_add( $post, $options ) {
 		// 'picture' => 'http://www.fillmurray.com/200/300',
 	);
 
-	$session = $coviu->sessions->createSession($session);
+    try {
+		$session = $coviu->sessions->createSession($session);
+	} catch (\Exception $e) {
+		?><div class="error"><p><strong><?php echo $e->getMessage(); ?></strong></p></div><?php
+		return;
+	}
+
 }
 
 
