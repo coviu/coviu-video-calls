@@ -2,7 +2,7 @@
 Contributors: silviapfeiffer1
 Tags: Coviu, video calls, webrtc, video, audio, chat, streaming, appointments, peer-to-peer
 Requires at least: 3.0
-Tested up to: 4.4
+Tested up to: 4.5.4
 Stable Tag: 0.2
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
