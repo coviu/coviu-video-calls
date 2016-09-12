@@ -50,8 +50,6 @@ defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
 require_once __DIR__.'/vendor/autoload.php';
 use coviu\Api\Coviu;
 
-require_once(WP_PLUGIN_DIR . '/coviu-video-calls/coviu-shortcode.php');
-
 /// ***  Set up and remove options for plugin *** ///
 
 register_activation_hook( __FILE__, 'cvu_setup_options' );
@@ -543,7 +541,12 @@ function cvu_session_delete( $session_id, $options ) {
 	$coviu = new Coviu($options->api_key, $options->api_key_secret);
 
 	// delete the session
-	$deleted = $coviu->sessions->deleteSession( $session_id );
+	try {
+		$deleted = $coviu->sessions->deleteSession( $session_id );
+	} catch (\Exception $e) {
+		?><div class="error"><p><strong><?php echo $e->getMessage(); ?></strong></p></div><?php
+		return;
+	}
 
 	// notify if deleted
 	if ($deleted) {
