@@ -4,7 +4,7 @@
  * Plugin URI: http://wordpress.org/extend/plugins/coviu-video-calls/
  * Description: Add Coviu video calling to your Website.
  * Author: Silvia Pfeiffer, NICTA, Coviu
- * Version: 0.1
+ * Version: 0.2
  * Author URI: http://www.coviu.com/
  * License: GPL2
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html.

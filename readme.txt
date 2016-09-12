@@ -3,7 +3,7 @@ Contributors: silviapfeiffer1
 Tags: Coviu, video calls, webrtc, video, audio, chat, streaming, appointments, peer-to-peer
 Requires at least: 3.0
 Tested up to: 4.4
-Stable Tag: 0.1
+Stable Tag: 0.2
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -38,7 +38,7 @@ To install the Coviu Video plugin simply:
 8. Go to the Settings page for Coviu Calls and enter your API key credentials
 9. Click on the Coviu Appointments menu item and start creating your bookings
 
-Make sure you have set up the wordpress instance with the right timezone in the General settings.
+Make sure you have set up the Wordpress instance with the right timezone in the General settings.
 
 == Frequently Asked Questions ==
 
@@ -70,7 +70,6 @@ For more information, see https://coviu.com/downloads
 = What shortcodes are available? =
 
 The plugin currently provides no shortcodes.
-
 If you need any, please contact support@coviu.com.
 
 
@@ -113,11 +112,9 @@ New features are being added constantly - you can always try out Coviu with a fr
 
 == Screenshots ==
 
-1. Screenshot1.png : the admin interface of the Coviu video calls Wordpress extension
-2. Screenshot2.png : example owner button and guest link for a Coviu call URL created via shortcode
-3. Screenshot3.png : example video call for an owner created via shortcode with embed flag
-4. Screenshot4.png : example video call for a guest created via shortcode with embed flag
-5. Screenshot5.png : example connected video call created via shortcode with embed flag
+1. Screenshot1.png : the admin interface of the Coviu video calls Wordpress plugin
+2. Screenshot2.png : the appointments page of the Coviu video calls Wordpress plugin
+3. Screenshot3.png : example video call on Coviu
 
 
 == Changelog ==
@@ -125,3 +122,7 @@ New features are being added constantly - you can always try out Coviu with a fr
 = 0.1 =
 * Initial version
 
+= 0.2 =
+* Updated to the new API
+* Now includes appointment bookings
+* Removed all shortcodes until we know better what is required
