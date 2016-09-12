@@ -94,6 +94,9 @@ function cvu_appointments_page() {
 	// retrieve stored options
 	$options = get_option('coviu-video-calls');
 
+	// Always use GMT internally (matches with coviu API)
+	date_default_timezone_set('GMT');
+
 	// process form data
 	if( isset($_POST['coviu']) ) {
 		// nonce check
@@ -224,15 +227,42 @@ function cvu_credentials_form( $actionurl, $options ) {
 }
 
 function cvu_session_form( $actionurl ) {
-	$end_time = wp_get_datetime_now()->add(new DateInterval('PT1H'));
-
 	?>
 	<script type="text/javascript">
 		jQuery(document).ready(function($){
-			jQuery('#datepicker').datepicker({
-				dateFormat: "dd M yy",
+			// Set local times to now, now + 1hour
+			var now = new Date();
+			jQuery('#start_time').val(now.toLocalISOString());
+			now.setHours(now.getHours() + 1);
+			jQuery('#end_time').val(now.toLocalISOString());
+
+			jQuery('#add_session').submit(function() {
+				// Convert local times to UTC before submitting
+				var start_time = jQuery('#start_time');
+				var end_time = jQuery('#end_time');
+				// Goota change the field type to circumvent input validation
+				start_time.attr('type', 'text');
+				end_time.attr('type', 'text');
+				start_time.val(new Date(jQuery('#start_time').val()).toISOString());
+				end_time.val(new Date(jQuery('#end_time').val()).toISOString());
 			});
 		});
+
+		// Javascript is absolute garbage
+		function pad(number) {
+			if (number < 10) {
+				return '0' + number;
+			}
+			return number;
+		}
+
+		Date.prototype.toLocalISOString = function() {
+			return this.getFullYear() +
+				'-' + pad(this.getMonth() + 1) +
+				'-' + pad(this.getDate()) +
+				'T' + pad(this.getHours()) +
+				':' + pad(this.getMinutes());
+		};
 	</script>
 
 	<form id="add_session" method="post" action="<?php echo $actionurl; ?>">
@@ -244,16 +274,12 @@ function cvu_session_form( $actionurl ) {
 			<input type="text" name="coviu[name]" value="Description of Appointment" size="40"/>
 		</p>
 		<p>
-			<?php _e('Date:', 'coviu-video-calls'); ?>
-			<input id="datepicker" type="text" name="coviu[date]" value="<?php echo current_time('d M Y'); ?>" />
+			<?php _e('Start:', 'coviu-video-calls'); ?>
+			<input id="start_time" type="datetime-local" name="coviu[start_time]" />
 		</p>
 		<p>
-			<?php _e('Start time:', 'coviu-video-calls'); ?>
-			<input type="time" name="coviu[start]" value="<?php echo current_time('H:i'); ?>" />
-		</p>
-		<p>
-			<?php _e('End time:', 'coviu-video-calls'); ?>
-			<input type="time" name="coviu[end]" value="<?php echo $end_time->format('H:i'); ?>" />
+			<?php _e('End:', 'coviu-video-calls'); ?>
+			<input id="end_time" type="datetime-local" name="coviu[end_time]" />
 		</p>
 		<p class="submit">
 			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Add Appointment', 'coviu-video-calls'); ?>" />
@@ -297,6 +323,15 @@ function cvu_sessions_display( $actionurl, $options ) {
 			}
 			jQuery('#edit_session').submit();
 		}
+
+		// Convert datetimes to local
+		jQuery(document).ready(function() {
+			jQuery('.datetime').each(function(i, obj) {
+				obj = jQuery(obj);
+				var date = new Date(obj.text());
+				obj.text(date.toLocaleString());
+			});
+		});
 	</script>
 
 	<form id="edit_session" method="post" action="<?php echo $actionurl; ?>">
@@ -335,13 +370,9 @@ function cvu_sessions_display( $actionurl, $options ) {
 			$sessions = $sessions['content'];
 			//var_dump($sessions);
 
-			date_default_timezone_set('GMT');
 			foreach ($sessions as $key => $session) {
-				$start_time = new DateTime($session['start_time']);
-				$end_time   = new DateTime($session['end_time']);
-
-				$sessions[$key]['start_time'] = $start_time->setTimezone(wp_get_datetimezone());
-				$sessions[$key]['end_time']   = $end_time->setTimezone(wp_get_datetimezone());
+				$sessions[$key]['start_time'] = new DateTime($session['start_time']);
+				$sessions[$key]['end_time']   = new DateTime($session['end_time']);
 			}
 
 			function cmp_by_time($session1, $session2) {
@@ -350,7 +381,7 @@ function cvu_sessions_display( $actionurl, $options ) {
 			usort($sessions, 'cmp_by_time');
 
 			$upcoming_split_index = 0;
-			$now = wp_get_datetime_now();
+			$now = new DateTime();
 			foreach ($sessions as $session) {
 				if ($now >= $session['start_time']) break;
 
@@ -401,7 +432,6 @@ function cvu_session_table_header($title) {
 			<tr>
 				<th>ID</th>
 				<th>Description</th>
-				<th>Date</th>
 				<th>Start</th>
 				<th>End</th>
 				<th>Host</th>
@@ -442,15 +472,14 @@ function cvu_session_display($session) {
 			}
 		}
 	}
-	$now = wp_get_datetime_now();
+	$now = new DateTime();
 
 	?>
 	<tr>
 		<td><?php echo substr($session['session_id'], 0, 5). " ... "; ?></td>
 		<td><?php echo $session['session_name']; ?></td>
-		<td><?php echo $session['start_time']->format('d-M-Y'); ?></td>
-		<td><?php echo $session['start_time']->format('H:i'); ?></td>
-		<td><?php echo $session['end_time']->format('H:i'); ?></td>
+		<td class="datetime"><?php echo $session['start_time']->format(DateTime::ATOM); ?></td>
+		<td class="datetime"><?php echo $session['end_time']->format(DateTime::ATOM); ?></td>
 		<td>
 			<?php foreach($hosts as $host) { ?>
 				<img src="<?php echo $host['picture']; ?>" width="30px"/>
@@ -502,17 +531,16 @@ function cvu_session_add( $post, $options ) {
 	$coviu = new Coviu($options->api_key, $options->api_key_secret);
 
 	// created date-time objects
-	$start    = $post['date'] . ' ' . $post['start'];
-	$end      = $post['date'] . ' ' . $post['end'];
-	$startObj = wp_get_datetime($start);
-	$endObj   = wp_get_datetime($end);
+	$start_time = new DateTime($post['start_time']);
+	$end_time   = new DateTime($post['end_time']);
+	$now        = new DateTime();
 
 	// check dates
-	if ($endObj <= $startObj) {
+	if ($end_time <= $start_time) {
 		?><div class="error"><p><strong><?php echo __("Error: Can't create an Appointment that starts after it ends.", 'coviu-video-calls'); ?></strong></p></div><?php
 		return;
 	}
-	if ($startObj <= wp_get_datetime_now()) {
+	if ($start_time <= $now) {
 		?><div class="error"><p><strong><?php echo __("Error: Can't create an Appointment in the past.", 'coviu-video-calls'); ?></strong></p></div><?php
 		return;
 	}
@@ -520,8 +548,8 @@ function cvu_session_add( $post, $options ) {
 	// add the session
 	$session = array(
 		'session_name' => $post['name'],
-		'start_time' => $startObj->format(DateTime::ATOM),
-		'end_time' => $endObj->format(DateTime::ATOM),
+		'start_time' => $start_time->format(DateTime::ATOM),
+		'end_time' => $end_time->format(DateTime::ATOM),
 		// 'picture' => 'http://www.fillmurray.com/200/300',
 	);
 
@@ -555,55 +583,4 @@ function cvu_session_delete( $session_id, $options ) {
 
 function prettyprint($var) {
 	print '<pre>'; print_r($var); print '</pre>';
-}
-
-// Wordpress is an absolute mess when it comes to time handling
-
-function wp_get_datetime_now() {
-	return wp_get_datetime(current_time('Y-m-d H:i'));
-}
-
-function wp_get_datetime($time) {
-	return new DateTime($time, wp_get_datetimezone());
-}
-
-function wp_format_datetime($datetime) {
-	return $datetime->format(get_option('date_format') + ' ' + get_option('time_format'));
-}
-
-function wp_get_datetimezone() {
-	return new DateTimeZone(wp_get_timezone_string());
-}
-
-function wp_get_timezone_string() {
-	// if site timezone string exists, return it
-	if ( $timezone = get_option( 'timezone_string' ) ) {
-		return $timezone;
-	}
-
-	// get UTC offset, if it isn't set then return UTC
-	if ( 0 === ( $utc_offset = get_option( 'gmt_offset', 0 ) ) ) {
-		return 'UTC';
-	}
-
-	// adjust UTC offset from hours to seconds
-	$utc_offset *= 3600;
-
-	// attempt to guess the timezone string from the UTC offset
-	if ( $timezone = timezone_name_from_abbr( '', $utc_offset, 0 ) ) {
-		return $timezone;
-	}
-
-	// last try, guess timezone string manually
-	$is_dst = date( 'I' );
-
-	foreach ( timezone_abbreviations_list() as $abbr ) {
-		foreach ( $abbr as $city ) {
-			if ( $city['dst'] == $is_dst && $city['offset'] == $utc_offset )
-				return $city['timezone_id'];
-		}
-	}
-
-	// fallback to UTC
-	return 'UTC';
 }
