@@ -318,6 +318,9 @@ function cvu_sessions_display( $actionurl, $options ) {
 				padding: 0 5px;
 			}
 			.cvu_list tbody tr td:nth-of-type(1) {font-weight: bold;}
+			.cvu_list tbody tr td {
+				text-align: center;
+			}
 		</style>
 
 		<?php
@@ -398,6 +401,7 @@ function cvu_session_table_header($title) {
 			<tr>
 				<th>ID</th>
 				<th>Description</th>
+				<th>Date</th>
 				<th>Start</th>
 				<th>End</th>
 				<th>Host</th>
@@ -444,15 +448,10 @@ function cvu_session_display($session) {
 	<tr>
 		<td><?php echo substr($session['session_id'], 0, 5). " ... "; ?></td>
 		<td><?php echo $session['session_name']; ?></td>
-		<td><?php echo $session['start_time']->format('Y-m-d H:i'); ?></td>
-		<td><?php echo $session['end_time']->format('Y-m-d H:i'); ?></td>
+		<td><?php echo $session['start_time']->format('d-m-Y'); ?></td>
+		<td><?php echo $session['start_time']->format('H:i'); ?></td>
+		<td><?php echo $session['end_time']->format('H:i'); ?></td>
 		<td>
-			<?php
-			$session_time = $session['start_time'];
-			if ($session_time > $now) { ?>
-				<button type="button" class="thickbox_custom" data-role='host' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('+ Add', 'coviu-video-calls') ?></button><br/>
-			<?php } ?>
-
 			<?php foreach($hosts as $host) { ?>
 				<img src="<?php echo $host['picture']; ?>" width="30px"/>
 				<a href="<?php echo $host['entry_url']; ?>"><?php echo $host['display_name']; ?>
@@ -461,11 +460,6 @@ function cvu_session_display($session) {
 			<?php } ?>
 		</td>
 		<td>
-			<?php
-			if ($session_time > $now) { ?>
-				<button type="button" class="thickbox_custom" data-role='guest' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('+ Add', 'coviu-video-calls') ?></button><br/>
-			<?php } ?>
-
 			<?php foreach($guests as $guest) { ?>
 				<a href="<?php echo $guest['entry_url']; ?>"><?php echo $guest['display_name']; ?>
 				</a>
@@ -473,8 +467,11 @@ function cvu_session_display($session) {
 			<?php } ?>
 		</td>
 		<?php
+		$session_time = $session['start_time'];
 		if ($session_time > $now) { ?>
 			<td>
+				<a href="#" class="thickbox_custom" data-role='host' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('Add Host', 'coviu-video-calls') ?></a><br/>
+				<a href="#" class="thickbox_custom" data-role='guest' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('Add Guest', 'coviu-video-calls') ?></a><br/>
 				<a href="#" onclick="delete_session('<?php echo $session['session_id']; ?>');"><?php echo __(
 'Cancel') ?></a></td>
 			</td>
