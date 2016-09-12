@@ -448,7 +448,7 @@ function cvu_session_display($session) {
 	<tr>
 		<td><?php echo substr($session['session_id'], 0, 5). " ... "; ?></td>
 		<td><?php echo $session['session_name']; ?></td>
-		<td><?php echo $session['start_time']->format('d-m-Y'); ?></td>
+		<td><?php echo $session['start_time']->format('d-M-Y'); ?></td>
 		<td><?php echo $session['start_time']->format('H:i'); ?></td>
 		<td><?php echo $session['end_time']->format('H:i'); ?></td>
 		<td>
