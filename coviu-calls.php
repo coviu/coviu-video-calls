@@ -541,7 +541,12 @@ function cvu_session_delete( $session_id, $options ) {
 	$coviu = new Coviu($options->api_key, $options->api_key_secret);
 
 	// delete the session
-	$deleted = $coviu->sessions->deleteSession( $session_id );
+	try {
+		$deleted = $coviu->sessions->deleteSession( $session_id );
+	} catch (\Exception $e) {
+		?><div class="error"><p><strong><?php echo $e->getMessage(); ?></strong></p></div><?php
+		return;
+	}
 
 	// notify if deleted
 	if ($deleted) {
