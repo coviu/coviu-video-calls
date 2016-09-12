@@ -358,6 +358,8 @@ function cvu_sessions_display( $actionurl, $options ) {
 
 			$upcoming_sessions = array_slice($sessions, 0, $upcoming_split_index);
 			if (count($upcoming_sessions) > 0) {
+				// reverse sort order to get current ones first
+				$upcoming_sessions = array_reverse($upcoming_sessions);
 				cvu_sessions_table('Upcoming Appointments', $upcoming_sessions);
 			}
 
