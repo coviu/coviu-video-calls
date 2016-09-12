@@ -58,6 +58,7 @@ The call is subsequently set up directly between all the participants. All audio
 Sign up for a developer account at https://coviu.com/checkout/team?plan-type=api-plan .
 After you sign in, you can create API keys.
 Make sure to remember the password - it cannot be retrieved via the application.
+You will find pricing information associated with this API at https://coviu.com/checkout.
 
 
 = Does it work on mobile devices? =
@@ -126,3 +127,9 @@ New features are being added constantly - you can always try out Coviu with a fr
 * Updated to the new API
 * Now includes appointment bookings
 * Removed all shortcodes until we know better what is required
+
+
+== Upgrade Notice ==
+
+= 2.0 =
+Make sure to use the new API starting at this version.
