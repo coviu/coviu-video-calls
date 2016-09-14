@@ -448,7 +448,7 @@ function cvu_sessions_display( $actionurl, $options ) {
 					<?php _e('User:', 'coviu-video-calls'); ?>
 					<select name="coviu[user_id]">
 						<?php foreach ($users as $user) { ?>
-						<option value="<?php echo $user->get('id'); ?>"> <?php echo $user->get('display_name'); ?> </option>
+						<option value="<?php echo $user->get('ID'); ?>"> <?php echo $user->get('display_name'); ?> </option>
 						<?php } ?>
 					</select>
 				</p>
@@ -575,7 +575,7 @@ function cvu_guest_add( $post, $options ) {
 		// 'state'        => 'test-state',
 	);
 
-	$added = cvu_participant_add( $post['session_id'], $participant );
+	$added = cvu_participant_add( $options, $post['session_id'], $participant );
 }
 
 function cvu_host_add( $post, $options ) {
@@ -585,20 +585,20 @@ function cvu_host_add( $post, $options ) {
 		exit;
 	}
 
-	$picture = get_avatar_url($user->get('id'));
+	$picture = get_avatar_url($user->get('ID'));
 
 	// put together a participant
 	$participant = array(
 		'display_name' => $user->get('display_name'),
 		'role'         => 'host',
 		'picture'      => $picture,
-		'state'        => (string)($user->get('id')),
+		'state'        => (string)($user->get('ID')),
 	);
 
-	$added = cvu_participant_add( $post['session_id'], $participant );
+	$added = cvu_participant_add( $options, $post['session_id'], $participant );
 }
 
-function cvu_participant_add( $session_id, $participant ) {
+function cvu_participant_add( $options, $session_id, $participant ) {
 	// Recover coviu
 	$coviu = new Coviu($options->api_key, $options->api_key_secret);
 
