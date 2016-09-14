@@ -516,8 +516,13 @@ function cvu_session_display($session) {
 			<td>
 				<a href="#" class="thickbox_custom" data-role='host' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('Add Host', 'coviu-video-calls') ?></a><br/>
 				<a href="#" class="thickbox_custom" data-role='guest' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('Add Guest', 'coviu-video-calls') ?></a><br/>
-				<a href="#" onclick="delete_session('<?php echo $session['session_id']; ?>');"><?php echo __(
-'Cancel') ?></a></td>
+				<?php // active sessions cannot be deleted
+				if ($session['start_time'] >= $now) {
+				?>
+					<a href="#" onclick="delete_session('<?php echo $session['session_id']; ?>');">
+						<?php echo __('Cancel') ?>
+					</a>
+				<?php } ?>
 			</td>
 		<?php } ?>
 	</tr>
