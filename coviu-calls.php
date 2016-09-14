@@ -347,14 +347,33 @@ function cvu_sessions_display( $actionurl, $options ) {
 			function cmp_by_time($session1, $session2) {
 				return $session1['start_time'] < $session2['start_time'];
 			}
+			// sort by start_time
 			usort($sessions, 'cmp_by_time');
 
 			$upcoming_split_index = 0;
+			$active_sessions = [];
 			$now = wp_get_datetime_now();
-			foreach ($sessions as $session) {
-				if ($now >= $session['start_time']) break;
 
+			// remove current sesions from array
+			foreach ($sessions as $key => $session) {
+				if ( $now >= $session['start_time'] && $now <= $session['end_time']) {
+					array_push( $active_sessions, $session );
+					unset( $sessions[$key] );
+				}
+			}
+			array_values($sessions);
+
+			// determine split point in remaining sessions
+			foreach ($sessions as $key => $session) {
+				if ($now > $session['start_time']) break;
 				$upcoming_split_index++;
+			}
+
+
+			if (count($active_sessions) > 0) {
+				// reverse sort order to get current ones first
+				$active_sessions = array_reverse($active_sessions);
+				cvu_sessions_table('Active Appointments', $active_sessions);
 			}
 
 			$upcoming_sessions = array_slice($sessions, 0, $upcoming_split_index);
@@ -406,7 +425,7 @@ function cvu_session_table_header($title) {
 				<th>End</th>
 				<th>Host</th>
 				<th>Guest</th>
-				<?php if (strpos($title, 'Upcoming') !== false ) { ?>
+				<?php if (substr_compare($title, 'Past', 0, 4) !== 0) { ?>
 					<th>Action</th>
 				<?php } ?>
 			</tr>
@@ -467,8 +486,8 @@ function cvu_session_display($session) {
 			<?php } ?>
 		</td>
 		<?php
-		$session_time = $session['start_time'];
-		if ($session_time > $now) { ?>
+		$session_time = $session['end_time'];
+		if ($session_time >= $now) { ?>
 			<td>
 				<a href="#" class="thickbox_custom" data-role='host' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('Add Host', 'coviu-video-calls') ?></a><br/>
 				<a href="#" class="thickbox_custom" data-role='guest' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('Add Guest', 'coviu-video-calls') ?></a><br/>
@@ -508,11 +527,11 @@ function cvu_session_add( $post, $options ) {
 	$endObj   = wp_get_datetime($end);
 
 	// check dates
-	if ($endObj <= $startObj) {
+	if ($endObj < $startObj) {
 		?><div class="error"><p><strong><?php echo __("Error: Can't create an Appointment that starts after it ends.", 'coviu-video-calls'); ?></strong></p></div><?php
 		return;
 	}
-	if ($startObj <= wp_get_datetime_now()) {
+	if ($startObj < wp_get_datetime_now()) {
 		?><div class="error"><p><strong><?php echo __("Error: Can't create an Appointment in the past.", 'coviu-video-calls'); ?></strong></p></div><?php
 		return;
 	}
