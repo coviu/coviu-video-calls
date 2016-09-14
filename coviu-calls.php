@@ -342,7 +342,9 @@ function cvu_sessions_display( $actionurl, $options ) {
 			jQuery('.datetime').each(function(i, obj) {
 				obj = jQuery(obj);
 				var date = new Date(obj.text());
-				obj.text(date.toLocaleString());
+				var date_options = { day: 'numeric', month: 'numeric', year: 'numeric'};
+				var time_options = { hour: 'numeric', minute: 'numeric'};
+				obj.html(date.toLocaleDateString(navigator.languages[0], date_options) + "<br/>" + date.toLocaleTimeString(navigator.languages[0], time_options));
 			});
 		});
 	</script>
