@@ -586,8 +586,6 @@ function cvu_host_add( $post, $options ) {
 	}
 
 	$picture = get_avatar_url($user->get('id'));
-	print_r($picture);
-	print_r($user->get('id'));
 
 	// put together a participant
 	$participant = array(
