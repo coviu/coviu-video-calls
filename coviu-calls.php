@@ -239,7 +239,9 @@ function cvu_session_form( $actionurl ) {
 				// Goota change the field type to circumvent input validation
 				start_time.attr('type', 'text');
 				end_time.attr('type', 'text');
-				var millis = now.getTime() + (now.getTimezoneOffset() * 60000);
+
+				// Gotta convert between timezones manually,
+				// because Javascript sure isn't going to do it
 				var start = new Date(jQuery('#start_time').val());
 				var end = new Date(jQuery('#end_time').val());
 				start_time.val(local_to_utc(start).toISOString());
