@@ -165,11 +165,7 @@ function cvu_settings_page() {
 
 			// check if credentials were provided
 			if ( !$_POST['coviu']['api_key'] || !$_POST['coviu']['api_key_secret'] ) {
-				?>
-				<div class="error">
-					<p><strong><?php echo __('Missing API credentials.', 'coviu-video-calls'); ?></strong></p>
-				</div>
-				<?php
+				error( __('Missing API credentials.', 'coviu-video-calls') );
 			} else {
 
 				// updating credentials
@@ -545,7 +541,7 @@ function cvu_participant_add( $post, $options ) {
 	try {
 		$added = $coviu->sessions->addParticipant ($post['session_id'], $participant);
 	} catch (\Exception $e) {
-		?><div class="error"><p><strong><?php echo $e->getMessage(); ?></strong></p></div><?php
+		error( $e->getMessage() );
 		return;
 	}
 
@@ -562,11 +558,11 @@ function cvu_session_add( $post, $options ) {
 
 	// check dates
 	if ($end_time < $start_time) {
-		?><div class="error"><p><strong><?php echo __("Error: Can't create an Appointment that starts after it ends.", 'coviu-video-calls'); ?></strong></p></div><?php
+		error( __("Can't create an Appointment that starts after it ends.", 'coviu-video-calls'));
 		return;
 	}
 	if ($start_time < $now) {
-		?><div class="error"><p><strong><?php echo __("Error: Can't create an Appointment in the past.", 'coviu-video-calls'); ?></strong></p></div><?php
+		error( __("Can't create an Appointment in the past.", 'coviu-video-calls'));
 		return;
 	}
 
@@ -581,7 +577,7 @@ function cvu_session_add( $post, $options ) {
 	try {
 		$session = $coviu->sessions->createSession($session);
 	} catch (\Exception $e) {
-		?><div class="error"><p><strong><?php echo $e->getMessage(); ?></strong></p></div><?php
+		error( $e->getMessage() );
 		return;
 	}
 }
@@ -594,7 +590,7 @@ function cvu_session_delete( $session_id, $options ) {
 	try {
 		$deleted = $coviu->sessions->deleteSession( $session_id );
 	} catch (\Exception $e) {
-		?><div class="error"><p><strong><?php echo $e->getMessage(); ?></strong></p></div><?php
+		error( $e->getMessage() );
 		return;
 	}
 
@@ -602,8 +598,15 @@ function cvu_session_delete( $session_id, $options ) {
 	if ($deleted) {
 		?><div class="updated"><p><strong><?php printf(__("Deleted session %s.", "Deleted session %s.", $session_id, 'coviu-video-calls'), $session_id); ?></strong></p></div><?php
 	} else {
-		?><div class="error"><p><strong><?php echo __("Can't delete an Appointment that doesn't exist.", 'coviu-video-calls'); ?></strong></p></div><?php
+		error( __("Can't delete an Appointment that doesn't exist.", 'coviu-video-calls') );
 	}
+}
+
+function error($err_str) {
+	?><div class="error">
+		<p><strong><?php echo str_replace('\n', '<br/>', 'Error: '.$err_str); ?></strong></p>
+	</div><?php
+	return;
 }
 
 function prettyprint($var) {
