@@ -239,10 +239,20 @@ function cvu_session_form( $actionurl ) {
 				// Goota change the field type to circumvent input validation
 				start_time.attr('type', 'text');
 				end_time.attr('type', 'text');
-				start_time.val(new Date(jQuery('#start_time').val()).toISOString());
-				end_time.val(new Date(jQuery('#end_time').val()).toISOString());
+				var millis = now.getTime() + (now.getTimezoneOffset() * 60000);
+				var start = new Date(jQuery('#start_time').val());
+				var end = new Date(jQuery('#end_time').val());
+				start_time.val(local_to_utc(start).toISOString());
+				end_time.val(local_to_utc(end).toISOString());
 			});
 		});
+
+		function local_to_utc(date) {
+			var time = date.getTime() + date.getTimezoneOffset() * 60000;
+			var out = new Date();
+			out.setTime(time);
+			return out;
+		}
 
 		// Javascript is absolute garbage
 		function pad(number) {
