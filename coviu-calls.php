@@ -513,7 +513,13 @@ function cvu_participant_add( $post, $options ) {
 	);
 
 	// add a host or guest participant
-	$added = $coviu->sessions->addParticipant ($post['session_id'], $participant);
+	try {
+		$added = $coviu->sessions->addParticipant ($post['session_id'], $participant);
+	} catch (\Exception $e) {
+		?><div class="error"><p><strong><?php echo $e->getMessage(); ?></strong></p></div><?php
+		return;
+	}
+
 }
 
 function cvu_session_add( $post, $options ) {
