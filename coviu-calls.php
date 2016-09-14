@@ -114,10 +114,13 @@ function cvu_appointments_page() {
 
 				cvu_session_add( $_POST['coviu'], $options );
 
-			} elseif ($_POST['coviu']['action'] == 'add_participant') {
+			} elseif ($_POST['coviu']['action'] == 'add_guest') {
 
-				cvu_participant_add( $_POST['coviu'], $options );
+				cvu_guest_add( $_POST['coviu'], $options );
 
+			} elseif ($_POST['coviu']['action'] == 'add_host') {
+
+				cvu_host_add( $_POST['coviu'], $options );
 			}
 		}
 	}
@@ -297,6 +300,8 @@ function cvu_session_form( $actionurl ) {
 }
 
 function cvu_sessions_display( $actionurl, $options ) {
+	$users = get_users();
+
 	?>
 	<script type="text/javascript">
 		// set up thickbox function handling
@@ -305,18 +310,18 @@ function cvu_sessions_display( $actionurl, $options ) {
 				// get params for thickbox form
 				var role = jQuery(this).data('role');
 				var session_id = jQuery(this).data('sessionid');
+				var id = role + '_form';
 
 				// set params in form
-				jQuery('#participant_form input#role').val(role);
-				jQuery('#participant_form input#session_id').val(session_id);
+				jQuery('#' + id + ' input#session_id').val(session_id);
 				if (role == 'host') {
-					jQuery('#participant_form input#submit').val("<?php _e('Add host', 'coviu-video-calls'); ?>");
+					jQuery('#' + id + ' input[type="submit"]').val("<?php _e('Add host', 'coviu-video-calls'); ?>");
 				} else {
-					jQuery('#participant_form input#submit').val("<?php _e('Add guest', 'coviu-video-calls'); ?>");
+					jQuery('#' + id + ' input[type="submit"]').val("<?php _e('Add guest', 'coviu-video-calls'); ?>");
 				}
 
 				// render thickbox
-				tb_show('Add ' + role + ' to Appointment', '#TB_inline?height=170&width=400&inlineId=participant_form', false);
+				tb_show('Add ' + role + ' to Appointment', '#TB_inline?height=170&width=400&inlineId=' + id, false);
 				this.blur();
 				return false;
 			});
@@ -432,20 +437,40 @@ function cvu_sessions_display( $actionurl, $options ) {
 	</form>
 
 	<!-- The overlay thickbox form -->
-	<div id="participant_form" style="display:none;">
+	<div id="host_form" style="display:none;">
 		<p>
-			<form id="add_participant" method="post" action="<?php echo $actionurl; ?>">
+			<form id="add_host" method="post" action="<?php echo $actionurl; ?>">
 				<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
-				<input type="hidden" name="coviu[action]" value="add_participant" />
+				<input type="hidden" name="coviu[action]" value="add_host" />
 				<input type="hidden" name="coviu[session_id]" id="session_id" value=""/>
-				<input type="hidden" name="coviu[role]" id="role" value=""/>
+
+				<p>
+					<?php _e('User:', 'coviu-video-calls'); ?>
+					<select name="coviu[user_id]">
+						<?php foreach ($users as $user) { ?>
+						<option value="<?php echo $user->get('id'); ?>"> <?php echo $user->get('display_name'); ?> </option>
+						<?php } ?>
+					</select>
+				</p>
+				<p>
+					<input name="Submit" type="submit" class="button-primary" value="" />
+				</p>
+			</form>
+		</p>
+	</div>
+	<div id="guest_form" style="display:none;">
+		<p>
+			<form id="add_guest" method="post" action="<?php echo $actionurl; ?>">
+				<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
+				<input type="hidden" name="coviu[action]" value="add_guest" />
+				<input type="hidden" name="coviu[session_id]" id="session_id" value=""/>
 
 				<p>
 					<?php _e('Name:', 'coviu-video-calls'); ?>
 					<input type="text" name="coviu[participant_name]"/>
 				</p>
 				<p>
-					<input name="Submit" type="submit" class="button-primary" id="submit" value="" />
+					<input name="Submit" type="submit" class="button-primary" value="" />
 				</p>
 			</form>
 		</p>
@@ -542,26 +567,50 @@ function cvu_session_display($session) {
 }
 
 
-function cvu_participant_add( $post, $options ) {
-	// Recover coviu
-	$coviu = new Coviu($options->api_key, $options->api_key_secret);
-
+function cvu_guest_add( $post, $options ) {
 	// put together a participant
 	$participant = array(
 		'display_name' => $post['participant_name'],
-		'role'         => $post['role'],
-		'picture'      => 'http://fillmurray.com/200/300',
-		'state'        => 'test-state'
+		'role'         => 'guest',
+		// 'state'        => 'test-state',
 	);
 
-	// add a host or guest participant
+	$added = cvu_participant_add( $post['session_id'], $participant );
+}
+
+function cvu_host_add( $post, $options ) {
+	$user = get_user_by('id', $post['user_id']);
+	if (!$user) {
+		error(__("Can't add Host with non-existent user.", 'coviu-video-calls'));
+		exit;
+	}
+
+	$picture = get_avatar_url($user->get('id'));
+	print_r($picture);
+	print_r($user->get('id'));
+
+	// put together a participant
+	$participant = array(
+		'display_name' => $user->get('display_name'),
+		'role'         => 'host',
+		'picture'      => $picture,
+		'state'        => (string)($user->get('id')),
+	);
+
+	$added = cvu_participant_add( $post['session_id'], $participant );
+}
+
+function cvu_participant_add( $session_id, $participant ) {
+	// Recover coviu
+	$coviu = new Coviu($options->api_key, $options->api_key_secret);
+
+	// participant
 	try {
-		$added = $coviu->sessions->addParticipant ($post['session_id'], $participant);
+		return $coviu->sessions->addParticipant ($session_id, $participant);
 	} catch (\Exception $e) {
 		error( $e->getMessage() );
 		return;
 	}
-
 }
 
 function cvu_session_add( $post, $options ) {
