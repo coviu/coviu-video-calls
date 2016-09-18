@@ -1,5 +1,5 @@
 === Coviu Video Calls ===
-Contributors: silviapfeiffer1
+Contributors: silviapfeiffer1, ben.schaaf
 Tags: Coviu, video calls, webrtc, video, audio, chat, streaming, appointments, peer-to-peer
 Requires at least: 3.0
 Tested up to: 4.5.4
@@ -19,7 +19,9 @@ This plugin allows you to add video collaboration functionality to your Wordpres
 
 You are able to create video appointments with a link for each participant. You will want to share the links with the participants e.g. via email so they join at the given appointment time.
 
-The host will typically enter from within your Wordpress instance. As a host enters their room, they will be notified of participants/guests trying to join their room for a video call as these guests are "knocking" to ask to enter.
+Hosts are wordpress users that can schedule appointments, users can be anyone.
+
+The host will typically enter from within your Wordpress instance. As a host enters their room, they will be notified of participants/guests trying to join their room for a video call as these guests are "knocking" to ask to enter when they go to their appointment URL.
 
 Home page: http://www.coviu.com/
 
@@ -80,7 +82,7 @@ Here are a couple of terms that we use and what they mean.
 
 * Session: A Coviu call that occurs between two or more parties at a specified time, and has a finite duration. A Coviu call is a web (video, audio, data) call on Coviu held through either a browser, native app, or mobile. Currently sessions may have up to 5 participants.
 * Participants: Users who may participate in a coviu call. We distinguish between hosts and guests.
-* Hosts: A session participant who is hosting a session and who controls access to the session. Also called the session owner.
+* Hosts: A session participant who is hosting a session and who controls access to the session. Also called the session owner. In this plugin, they are registered wordpress users.
 * Guest: A session participante who has been granted access to a session by the host.
 
 
@@ -127,6 +129,7 @@ New features are being added constantly - you can always try out Coviu with a fr
 * Updated to the new API
 * Now includes appointment bookings
 * Removed all shortcodes until we know better what is required
+* Uses wordpress users to select hosts.
 
 
 == Upgrade Notice ==
