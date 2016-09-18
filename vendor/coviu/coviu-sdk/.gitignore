@@ -1,0 +1,5 @@
+composer.lock
+help.txt
+vendor/
+tests/logs/
+tests/docker-compose.yaml

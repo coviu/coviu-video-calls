@@ -1,0 +1,37 @@
+#!/bin/bash
+set -ex
+
+CMD=$1
+PID=''
+mkdir -p logs
+
+function services_down {
+	cd tests
+	docker-compose down || true
+	docker-compose rm --all -f || true
+	cd -
+}
+
+function services_up {
+	cd tests
+	docker-compose up -d
+	cd -
+}
+
+function finish {
+	services_down
+}
+
+trap finish EXIT
+
+services_down
+services_up
+
+# Block in case we are running in the context of docker-proxy
+sleep 5
+curl http://localhost:9400/index.html
+curl http://localhost:9400/v1/clyde/status
+curl http://localhost:9400/v1/coviu/status
+curl http://localhost:9400/v1/rockefeller/status
+
+./vendor/bin/phpunit
