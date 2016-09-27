@@ -78,7 +78,7 @@ function cvu_admin_menu() {
 
 function cvu_appointments_menu() {
 	$title = __('Coviu Appointments', 'coviu-appointments');
-	add_menu_page($title, 'Appointments', 'manage_options', 'coviu-appointments-menu', 'cvu_appointments_page', plugins_url('coviu-video-calls/images/icon.png'), 30);
+	add_menu_page($title, 'Appointments', 'read', 'coviu-appointments-menu', 'cvu_appointments_page', plugins_url('coviu-video-calls/images/icon.png'), 30);
 }
 
 function cvu_register_admin_scripts() {
@@ -87,7 +87,7 @@ function cvu_register_admin_scripts() {
 }
 
 function cvu_appointments_page() {
-	if ( !current_user_can( 'manage_options' ) )  {
+	if ( !current_user_can( 'read' ) )  {
 		wp_die( __( 'You do not have sufficient permissions to access this page.' ) );
 	}
 
@@ -306,7 +306,8 @@ function cvu_session_form( $actionurl ) {
 }
 
 function cvu_sessions_display( $actionurl, $options ) {
-	$users = get_users();
+	// for overlays
+	add_thickbox();
 
 	?>
 	<script type="text/javascript">
@@ -431,16 +432,21 @@ function cvu_sessions_display( $actionurl, $options ) {
 	</style>
 
 	<?php
-		// for overlays
-		add_thickbox();
-
 		// Recover coviu
 		$coviu = new Coviu($options->api_key, $options->api_key_secret);
 
-		// Get the first page of sessions
-		$sessions = $coviu->sessions->getSessions();
+		$current_user = wp_get_current_user();
+
+		if (current_user_can( 'edit_posts' )) {
+			$params = array();
+		} else {
+			$params = array(
+				'state' => $current_user->ID,
+			);
+		}
+
+		$sessions = $coviu->sessions->getSessions($params);
 		$sessions = $sessions['content'];
-		//var_dump($sessions);
 
 		foreach ($sessions as $key => $session) {
 			$sessions[$key]['start_time'] = new DateTime($session['start_time']);
@@ -504,7 +510,7 @@ function cvu_sessions_display( $actionurl, $options ) {
 				<p>
 					<?php _e('User:', 'coviu-video-calls'); ?>
 					<select name="coviu[user_id]">
-						<?php foreach ($users as $user) { ?>
+						<?php foreach (get_users() as $user) { ?>
 						<option value="<?php echo $user->get('ID'); ?>"> <?php echo $user->get('display_name'); ?> </option>
 						<?php } ?>
 					</select>
@@ -738,6 +744,14 @@ function cvu_session_add( $post, $options ) {
 	} catch (\Exception $e) {
 		error( $e->getMessage() );
 		return;
+	}
+
+	if (!current_user_can( 'edit_posts' )) {
+		$post = array(
+			'user_id'    => wp_get_current_user()->ID,
+			'session_id' => $session['session_id'],
+		);
+		cvu_host_add($post, $options);
 	}
 }
 
