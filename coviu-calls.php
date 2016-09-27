@@ -306,7 +306,8 @@ function cvu_session_form( $actionurl ) {
 }
 
 function cvu_sessions_display( $actionurl, $options ) {
-	$users = get_users();
+	// for overlays
+	add_thickbox();
 
 	?>
 	<script type="text/javascript">
@@ -431,9 +432,6 @@ function cvu_sessions_display( $actionurl, $options ) {
 	</style>
 
 	<?php
-		// for overlays
-		add_thickbox();
-
 		// Recover coviu
 		$coviu = new Coviu($options->api_key, $options->api_key_secret);
 
@@ -449,7 +447,6 @@ function cvu_sessions_display( $actionurl, $options ) {
 
 		$sessions = $coviu->sessions->getSessions($params);
 		$sessions = $sessions['content'];
-		//var_dump($sessions);
 
 		foreach ($sessions as $key => $session) {
 			$sessions[$key]['start_time'] = new DateTime($session['start_time']);
@@ -513,7 +510,7 @@ function cvu_sessions_display( $actionurl, $options ) {
 				<p>
 					<?php _e('User:', 'coviu-video-calls'); ?>
 					<select name="coviu[user_id]">
-						<?php foreach ($users as $user) { ?>
+						<?php foreach (get_users() as $user) { ?>
 						<option value="<?php echo $user->get('ID'); ?>"> <?php echo $user->get('display_name'); ?> </option>
 						<?php } ?>
 					</select>
