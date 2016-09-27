@@ -106,22 +106,18 @@ function cvu_appointments_page() {
 			exit;
 
 		} else {
-			if ($_POST['coviu']['action'] == 'delete_session') {
+			$actions = array(
+				'add_session'    => 'cvu_session_add',
+				'delete_session' => 'cvu_session_delete',
+				'add_guest'      => 'cvu_guest_add',
+				'delete_guest'   => 'cvu_guest_delete',
+				'add_host'       => 'cvu_host_add',
+				'delete_host'    => 'cvu_host_delete',
+			);
 
-				cvu_session_delete( $_POST['coviu']['session_id'], $options );
+			$action = $actions[$_POST['coviu']['action']];
 
-			} elseif ($_POST['coviu']['action'] == 'add_session') {
-
-				cvu_session_add( $_POST['coviu'], $options );
-
-			} elseif ($_POST['coviu']['action'] == 'add_guest') {
-
-				cvu_guest_add( $_POST['coviu'], $options );
-
-			} elseif ($_POST['coviu']['action'] == 'add_host') {
-
-				cvu_host_add( $_POST['coviu'], $options );
-			}
+			$action($_POST['coviu'], $options);
 		}
 	}
 
@@ -381,6 +377,22 @@ function cvu_sessions_display( $actionurl, $options ) {
 			jQuery('#edit_session').submit();
 		}
 
+		function delete_guest(guest_id) {
+			jQuery("#add_guest input[name='coviu[action]']").val('delete_guest');
+			jQuery("#add_guest input[name='coviu[guest_id]']").val(guest_id);
+			var confirmtext = "Are you sure you want to remove Guest '" + guest_id + "'";
+			if (!confirm(confirmtext)) return false;
+			jQuery('#add_guest').submit();
+		}
+
+		function delete_host(host_id) {
+			jQuery("#add_host input[name='coviu[action]']").val('delete_host');
+			jQuery("#add_host input[name='coviu[host_id]']").val(host_id);
+			var confirmtext = "Are you sure you want to remove Host '" + host_id + "'";
+			if (!confirm(confirmtext)) return false;
+			jQuery('#add_host').submit();
+		}
+
 		// Convert datetimes to local
 		jQuery(document).ready(function() {
 			jQuery('.datetime').each(function(i, obj) {
@@ -397,97 +409,96 @@ function cvu_sessions_display( $actionurl, $options ) {
 		<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
 		<input type="hidden" name="coviu[action]" id="submit_action"/>
 		<input type="hidden" name="coviu[session_id]" id="session_id"/>
-
-		<style>
-			.cvu_list {
-				min-width: 100%;
-				overflow: scroll;
-				white-space: nowrap;
-			}
-			.cvu_list tbody tr:nth-of-type(even) {background-color: white;}
-			.cvu_list th {
-				background-color:#0085ba;
-				font-weight:bold;
-				color:#fff;
-				padding: 0 5px;
-			}
-			.cvu_list tbody tr td:nth-of-type(1) {font-weight: bold;}
-			.cvu_list tbody tr td {
-				text-align: center;
-			}
-		</style>
-
-		<?php
-			// for overlays
-			add_thickbox();
-
-			// Recover coviu
-			$coviu = new Coviu($options->api_key, $options->api_key_secret);
-
-			// Get the first page of sessions
-			$sessions = $coviu->sessions->getSessions();
-			$sessions = $sessions['content'];
-			//var_dump($sessions);
-
-			foreach ($sessions as $key => $session) {
-				$sessions[$key]['start_time'] = new DateTime($session['start_time']);
-				$sessions[$key]['end_time']   = new DateTime($session['end_time']);
-			}
-
-			function cmp_by_time($session1, $session2) {
-				return $session1['start_time'] < $session2['start_time'];
-			}
-			// sort by start_time
-			usort($sessions, 'cmp_by_time');
-
-			$upcoming_split_index = 0;
-			$active_sessions = [];
-			$now = new DateTime();
-
-			// remove current sesions from array
-			foreach ($sessions as $key => $session) {
-				if ( $now >= $session['start_time'] && $now <= $session['end_time']) {
-					array_push( $active_sessions, $session );
-					unset( $sessions[$key] );
-				}
-			}
-			array_values($sessions);
-
-			// determine split point in remaining sessions
-			foreach ($sessions as $key => $session) {
-				if ($now > $session['start_time']) break;
-				$upcoming_split_index++;
-			}
-
-
-			if (count($active_sessions) > 0) {
-				// reverse sort order to get current ones first
-				$active_sessions = array_reverse($active_sessions);
-				cvu_sessions_table('Active Appointments', $active_sessions);
-			}
-
-			$upcoming_sessions = array_slice($sessions, 0, $upcoming_split_index);
-			if (count($upcoming_sessions) > 0) {
-				// reverse sort order to get current ones first
-				$upcoming_sessions = array_reverse($upcoming_sessions);
-				cvu_sessions_table('Upcoming Appointments', $upcoming_sessions);
-			}
-
-			$past_sessions = array_slice($sessions, $upcoming_split_index);
-			if (count($past_sessions) > 0) {
-				cvu_sessions_table('Past Appointments', $past_sessions);
-			}
-		?>
-		<div id="sessions">
-		</div>
 	</form>
+
+	<style>
+		.cvu_list {
+			min-width: 100%;
+			overflow: scroll;
+			white-space: nowrap;
+		}
+		.cvu_list tbody tr:nth-of-type(even) {background-color: white;}
+		.cvu_list th {
+			background-color:#0085ba;
+			font-weight:bold;
+			color:#fff;
+			padding: 0 5px;
+		}
+		.cvu_list tbody tr td:nth-of-type(1) {font-weight: bold;}
+		.cvu_list tbody tr td {
+			text-align: center;
+		}
+	</style>
+
+	<?php
+		// for overlays
+		add_thickbox();
+
+		// Recover coviu
+		$coviu = new Coviu($options->api_key, $options->api_key_secret);
+
+		// Get the first page of sessions
+		$sessions = $coviu->sessions->getSessions();
+		$sessions = $sessions['content'];
+		//var_dump($sessions);
+
+		foreach ($sessions as $key => $session) {
+			$sessions[$key]['start_time'] = new DateTime($session['start_time']);
+			$sessions[$key]['end_time']   = new DateTime($session['end_time']);
+		}
+
+		function cmp_by_time($session1, $session2) {
+			return $session1['start_time'] < $session2['start_time'];
+		}
+		// sort by start_time
+		usort($sessions, 'cmp_by_time');
+
+		$upcoming_split_index = 0;
+		$active_sessions = [];
+		$now = new DateTime();
+
+		// remove current sesions from array
+		foreach ($sessions as $key => $session) {
+			if ( $now >= $session['start_time'] && $now <= $session['end_time']) {
+				array_push( $active_sessions, $session );
+				unset( $sessions[$key] );
+			}
+		}
+		array_values($sessions);
+
+		// determine split point in remaining sessions
+		foreach ($sessions as $key => $session) {
+			if ($now > $session['start_time']) break;
+			$upcoming_split_index++;
+		}
+
+
+		if (count($active_sessions) > 0) {
+			// reverse sort order to get current ones first
+			$active_sessions = array_reverse($active_sessions);
+			cvu_sessions_table('Active Appointments', $active_sessions);
+		}
+
+		$upcoming_sessions = array_slice($sessions, 0, $upcoming_split_index);
+		if (count($upcoming_sessions) > 0) {
+			// reverse sort order to get current ones first
+			$upcoming_sessions = array_reverse($upcoming_sessions);
+			cvu_sessions_table('Upcoming Appointments', $upcoming_sessions);
+		}
+
+		$past_sessions = array_slice($sessions, $upcoming_split_index);
+		if (count($past_sessions) > 0) {
+			cvu_sessions_table('Past Appointments', $past_sessions);
+		}
+	?>
 
 	<!-- The overlay thickbox form -->
 	<div id="host_form" style="display:none;">
 		<p>
 			<form id="add_host" method="post" action="<?php echo $actionurl; ?>">
 				<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
-				<input type="hidden" name="coviu[action]" value="add_host" />
+				<input type="hidden" name="coviu[action]" value="add_host"/>
+				<input type="hidden" name="coviu[host_id]"/>
 				<input type="hidden" name="coviu[session_id]" id="session_id" value=""/>
 
 				<p>
@@ -508,7 +519,8 @@ function cvu_sessions_display( $actionurl, $options ) {
 		<p>
 			<form id="add_guest" method="post" action="<?php echo $actionurl; ?>">
 				<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
-				<input type="hidden" name="coviu[action]" value="add_guest" />
+				<input type="hidden" name="coviu[action]" value="add_guest"/>
+				<input type="hidden" name="coviu[guest_id]"/>
 				<input type="hidden" name="coviu[session_id]" id="session_id" value=""/>
 
 				<p>
@@ -570,7 +582,9 @@ function cvu_session_display($session) {
 			}
 		}
 	}
+
 	$now = new DateTime();
+	$session_time = $session['end_time'];
 
 	?>
 	<tr>
@@ -587,6 +601,11 @@ function cvu_session_display($session) {
 				<span class='copy_link' data-link="<?php echo $host['entry_url']; ?>">
 					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png" alt="Copy Link">
 				</span>
+				<?php if ($session_time >= $now) { ?>
+					<a href="#" onclick="delete_host('<?php echo $host['participant_id']; ?>');">
+						x
+					</a>
+				<?php } ?>
 				<br/>
 			<?php } ?>
 		</td>
@@ -595,15 +614,18 @@ function cvu_session_display($session) {
 				<a href="<?php echo $guest['entry_url']; ?>">
 					<?php echo $guest['display_name']; ?>
 				</a>
-				<span class='copy_link' data-link="<?php echo $guest['entry_url']; ?>">
+				<span class='copy_link' data-link="<?php echo $guest['entry_url']; ?>	">
 					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png" alt="Copy Link">
 				</span>
+				<?php if ($session_time >= $now) { ?>
+					<a href="#" onclick="delete_guest('<?php echo $guest['participant_id']; ?>');">
+						x
+					</a>
+				<?php } ?>
 				<br/>
 			<?php } ?>
 		</td>
-		<?php
-		$session_time = $session['end_time'];
-		if ($session_time >= $now) { ?>
+		<?php if ($session_time >= $now) { ?>
 			<td>
 				<a href="#" class="thickbox_custom" data-role='host' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('Add Host', 'coviu-video-calls') ?></a><br/>
 				<a href="#" class="thickbox_custom" data-role='guest' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('Add Guest', 'coviu-video-calls') ?></a><br/>
@@ -620,7 +642,6 @@ function cvu_session_display($session) {
 	<?php
 }
 
-
 function cvu_guest_add( $post, $options ) {
 	// put together a participant
 	$participant = array(
@@ -630,6 +651,10 @@ function cvu_guest_add( $post, $options ) {
 	);
 
 	$added = cvu_participant_add( $options, $post['session_id'], $participant );
+}
+
+function cvu_guest_delete( $post, $options ) {
+	cvu_participant_delete( $options, $post['guest_id'] );
 }
 
 function cvu_host_add( $post, $options ) {
@@ -652,6 +677,10 @@ function cvu_host_add( $post, $options ) {
 	$added = cvu_participant_add( $options, $post['session_id'], $participant );
 }
 
+function cvu_host_delete( $post, $options ) {
+	cvu_participant_delete( $options, $post['host_id'] );
+}
+
 function cvu_participant_add( $options, $session_id, $participant ) {
 	// Recover coviu
 	$coviu = new Coviu($options->api_key, $options->api_key_secret);
@@ -659,6 +688,18 @@ function cvu_participant_add( $options, $session_id, $participant ) {
 	// participant
 	try {
 		return $coviu->sessions->addParticipant ($session_id, $participant);
+	} catch (\Exception $e) {
+		error( $e->getMessage() );
+		return;
+	}
+}
+
+function cvu_participant_delete( $options, $participant_id ) {
+	// Recover coviu
+	$coviu = new Coviu($options->api_key, $options->api_key_secret);
+
+	try {
+		return $coviu->sessions->deleteParticipant($participant_id);
 	} catch (\Exception $e) {
 		error( $e->getMessage() );
 		return;
@@ -700,7 +741,9 @@ function cvu_session_add( $post, $options ) {
 	}
 }
 
-function cvu_session_delete( $session_id, $options ) {
+function cvu_session_delete( $post, $options ) {
+	$session_id = $post['session_id'];
+
 	// Recover coviu
 	$coviu = new Coviu($options->api_key, $options->api_key_secret);
 
