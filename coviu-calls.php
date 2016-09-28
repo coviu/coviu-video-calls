@@ -435,6 +435,8 @@ function cvu_sessions_display( $actionurl, $options ) {
 		// Recover coviu
 		$coviu = new Coviu($options->api_key, $options->api_key_secret);
 
+		$now = new DateTime();
+
 		$params = array(
 			'page_size' => 10,
 		);
@@ -444,20 +446,20 @@ function cvu_sessions_display( $actionurl, $options ) {
 			));
 		}
 
-		$active_sessions = cvu_get_active_sessions($coviu, $params);
+		$active_sessions = cvu_get_active_sessions($coviu, $now, $params);
 		if (count($active_sessions) > 0) {
 			// reverse sort order to get current ones first
 			$active_sessions = array_reverse($active_sessions);
 			cvu_sessions_table('Active Appointments', $active_sessions, true);
 		}
 
-		list($upcoming_sessions, $more) = cvu_get_upcoming_sessions($coviu, $params);
+		list($upcoming_sessions, $more) = cvu_get_upcoming_sessions($coviu, $now, $params);
 		if (count($upcoming_sessions) > 0) {
 			cvu_sessions_table('Upcoming Appointments', $upcoming_sessions, true);
 			cvu_pagination('upcoming_page', $more);
 		}
 
-		list($past_sessions, $more) = cvu_get_past_sessions($coviu, $params, false);
+		list($past_sessions, $more) = cvu_get_past_sessions($coviu, $now, $params, false);
 		if (count($past_sessions) > 0) {
 			cvu_sessions_table('Past Appointments', $past_sessions, false);
 			cvu_pagination('past_page', $more);
@@ -765,12 +767,11 @@ function cvu_session_delete( $post, $options ) {
 	}
 }
 
-function cvu_get_active_sessions($coviu, $params = array()) {
+function cvu_get_active_sessions($coviu, $now, $params = array()) {
 	// Sessions are a maximum of 12 hours long
 	// So we can grab sessions within a 12 hour radius to get all currently active ones
-	$now = new DateTime();
 	$interval = new DateInterval("PT12H");
-	$start_time = clone $now;
+	$start_time = clone $now; // clone is a dumb implementation, it only works like this.
 	$start_time = $start_time->sub($interval);
 	$end_time = clone $now;
 	$end_time = $end_time->add($interval);
@@ -778,7 +779,7 @@ function cvu_get_active_sessions($coviu, $params = array()) {
 	$params = array_merge($params, array(
 		'start_time' => $start_time->format(DateTime::ATOM),
 		'end_time'   => $end_time->format(DateTime::ATOM),
-		'page_size'  => NULL, # unset this
+		'page_size'  => NULL, // unset this
 	));
 
 	list($sessions, $dummy) = cvu_get_sessions($coviu, $params);
@@ -794,9 +795,7 @@ function cvu_get_active_sessions($coviu, $params = array()) {
 	return $sessions;
 }
 
-function cvu_get_upcoming_sessions($coviu, $params = array()) {
-	$now = new DateTime();
-
+function cvu_get_upcoming_sessions($coviu, $now, $params = array()) {
 	$params = array_merge($params, array(
 		'start_time' => $now->format(DateTime::ATOM),
 		'page'       => (int)get_query_arg('upcoming_page', 0),
@@ -805,9 +804,7 @@ function cvu_get_upcoming_sessions($coviu, $params = array()) {
 	return cvu_get_sessions($coviu, $params);
 }
 
-function cvu_get_past_sessions($coviu, $params = array()) {
-	$now = new DateTime();
-
+function cvu_get_past_sessions($coviu, $now, $params = array()) {
 	$params = array_merge($params, array(
 		'order'    => 'reverse',
 		'end_time' => $now->format(DateTime::ATOM),
