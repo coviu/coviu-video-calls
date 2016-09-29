@@ -413,6 +413,26 @@ function cvu_sessions_display( $actionurl, $options ) {
 	</form>
 
 	<style>
+		.tooltip .tooltiptext {
+			visibility: hidden;
+			width: 120px;
+			background-color: black;
+			color: #fff;
+			text-align: center;
+			padding: 5px 0;
+			border-radius: 6px;
+			position: absolute;
+			z-index: 1;
+		}
+		.tooltip:hover .tooltiptext {
+			visibility: visible;
+		}
+		.tooltip .tooltiptext::after {
+			content: " ";
+			position: absolute;
+			border-style: solid;
+			border-color: transparent transparent black transparent;
+		}
 		.cvu_list {
 			min-width: 100%;
 			overflow: scroll;
@@ -572,12 +592,14 @@ function cvu_session_display($session, $allow_actions) {
 				<a href="<?php echo $host['entry_url']; ?>">
 					<?php echo $host['display_name']; ?>
 				</a>
-				<span class='copy_link' data-link="<?php echo $host['entry_url']; ?>">
-					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png" alt="Copy Link">
+				<span class='copy_link tooltip' data-link="<?php echo $host['entry_url']; ?>">
+					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png">
+					<span class="tooltiptext">Copy Link</span>
 				</span>
 				<?php if ($end_time >= $now) { ?>
-					<a href="#" onclick="delete_host('<?php echo $host['participant_id']; ?>');">
-						x
+					<a class='tooltip' href="#" onclick="delete_host('<?php echo $host['participant_id']; ?>');">
+						<img src="http://individual.icons-land.com/IconsPreview/BaseSoftware/PNG/16x16/DeleteRed.png">
+						<span class="tooltiptext">Remove</span>
 					</a>
 				<?php } ?>
 				<br/>
@@ -588,12 +610,14 @@ function cvu_session_display($session, $allow_actions) {
 				<a href="<?php echo $guest['entry_url']; ?>">
 					<?php echo $guest['display_name']; ?>
 				</a>
-				<span class='copy_link' data-link="<?php echo $guest['entry_url']; ?>	">
-					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png" alt="Copy Link">
+				<span class='copy_link tooltip' data-link="<?php echo $guest['entry_url']; ?>	">
+					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png">
+					<span class="tooltiptext">Copy Link</span>
 				</span>
 				<?php if ($end_time >= $now) { ?>
-					<a href="#" onclick="delete_guest('<?php echo $guest['participant_id']; ?>');">
-						x
+					<a class='tooltip' href="#" onclick="delete_guest('<?php echo $guest['participant_id']; ?>');">
+						<img src="http://individual.icons-land.com/IconsPreview/BaseSoftware/PNG/16x16/DeleteRed.png">
+						<span class="tooltiptext">Remove</span>
 					</a>
 				<?php } ?>
 				<br/>
