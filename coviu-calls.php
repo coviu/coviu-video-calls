@@ -225,7 +225,7 @@ function cvu_settings_page() {
 				// updating credentials
 				$options->api_key    = $_POST['coviu']['api_key'];
 				$options->api_key_secret = $_POST['coviu']['api_key_secret'];
-				$options->embed_participant_pages = $_POST['coviu']['embed_participant_pages'];
+				$options->embed_participant_pages = isset($_POST['coviu']['embed_participant_pages']);
 				update_option('coviu-video-calls', $options);
 
 				?>
@@ -972,7 +972,7 @@ function get_session_post_by_name( $name ){
 	);
 	$posts = get_posts($params);
 
-	if (count($posts) == 1) {
+	if (count($posts) < 1) {
 		return null;
 	}
 	return $posts[0];
