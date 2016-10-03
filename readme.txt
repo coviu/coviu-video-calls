@@ -155,9 +155,13 @@ If you need any, please contact support@coviu.com.
 * different wordpress user roles see different appointment lists
 * ability to create wordpress custom post types as appointment rooms
 * added pagination on appointment lists
+* support for wordpress 4.6
 
 
 == Upgrade Notice ==
 
 = 2.0 =
 Make sure to use the new API starting at this version.
+
+= 0.3 =
+Will now work with wordpress 4.6
