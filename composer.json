@@ -1,5 +1,5 @@
 {
 		"require": {
-				"coviu/coviu-sdk": ">=1.0.1"
+				"coviu/coviu-sdk": ">=1.0.2"
 		}
 }

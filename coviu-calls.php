@@ -407,7 +407,7 @@ function cvu_sessions_display( $actionurl, $options ) {
 			usort($sessions, 'cmp_by_time');
 
 			$upcoming_split_index = 0;
-			$active_sessions = [];
+			$active_sessions = array();
 			$now = new DateTime();
 
 			// remove current sesions from array

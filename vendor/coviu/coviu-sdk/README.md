@@ -22,12 +22,14 @@ coviu-php-sdk exposes this functionality through a convenient php library.
 composer require coviu/Api
 ```
 
+If you are not using composer in your application, still run the above command, which creates a `vendor` directory. Then commit the vendor directory into your codebase. You can get `composer` from https://getcomposer.org/download/ .
 
 ### Quickstart
 
 Setup the sdk by passing in your api key and key secret
 
 ```php
+require_once __DIR__.'/vendor/autoload.php';
 use coviu\Api\Coviu;
 
 $api_key = 'my_api_key_from_coviu.com';
