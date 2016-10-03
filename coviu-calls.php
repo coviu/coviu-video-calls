@@ -413,6 +413,13 @@ function cvu_sessions_display( $actionurl, $options ) {
 	</form>
 
 	<style>
+		.tooltip img {
+			cursor:pointer;
+			border: 1px solid transparent;
+		}
+		.tooltip img:active {
+			border: 1px solid grey;
+		}
 		.tooltip .tooltiptext {
 			visibility: hidden;
 			width: 120px;
@@ -446,7 +453,7 @@ function cvu_sessions_display( $actionurl, $options ) {
 			padding: 0 5px;
 		}
 		.cvu_list tbody tr td:nth-of-type(1) {font-weight: bold;}
-		.cvu_list tbody tr td {
+		.cvu_list tbody tr td.center {
 			text-align: center;
 		}
 	</style>
@@ -584,47 +591,47 @@ function cvu_session_display($session, $allow_actions) {
 	<tr>
 		<td><?php echo substr($session['session_id'], 0, 5). " ... "; ?></td>
 		<td><?php echo $session['session_name']; ?></td>
-		<td class="datetime"><?php echo $session['start_time']->format(DateTime::ATOM); ?></td>
-		<td class="datetime"><?php echo $session['end_time']->format(DateTime::ATOM); ?></td>
+		<td class="datetime center"><?php echo $session['start_time']->format(DateTime::ATOM); ?></td>
+		<td class="datetime center"><?php echo $session['end_time']->format(DateTime::ATOM); ?></td>
 		<td>
 			<?php foreach($hosts as $host) { ?>
 				<img src="<?php echo $host['picture']; ?>" width="30px"/>
-				<a href="<?php echo $host['entry_url']; ?>">
-					<?php echo $host['display_name']; ?>
-				</a>
 				<span class='copy_link tooltip' data-link="<?php echo $host['entry_url']; ?>">
 					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png">
 					<span class="tooltiptext">Copy Link</span>
 				</span>
+				<a href="<?php echo $host['entry_url']; ?>">
+					<?php echo $host['display_name']; ?>
+				</a>
 				<?php if ($end_time >= $now) { ?>
-					<a class='tooltip' href="#" onclick="delete_host('<?php echo $host['participant_id']; ?>');">
+					<span class='tooltip' onclick="delete_host('<?php echo $host['participant_id']; ?>');">
 						<img src="http://individual.icons-land.com/IconsPreview/BaseSoftware/PNG/16x16/DeleteRed.png">
 						<span class="tooltiptext">Remove</span>
-					</a>
+					</span>
 				<?php } ?>
 				<br/>
 			<?php } ?>
 		</td>
 		<td>
 			<?php foreach($guests as $guest) { ?>
-				<a href="<?php echo $guest['entry_url']; ?>">
-					<?php echo $guest['display_name']; ?>
-				</a>
 				<span class='copy_link tooltip' data-link="<?php echo $guest['entry_url']; ?>	">
 					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png">
 					<span class="tooltiptext">Copy Link</span>
 				</span>
+				<a href="<?php echo $guest['entry_url']; ?>">
+					<?php echo $guest['display_name']; ?>
+				</a>
 				<?php if ($end_time >= $now) { ?>
-					<a class='tooltip' href="#" onclick="delete_guest('<?php echo $guest['participant_id']; ?>');">
+					<span class='tooltip' onclick="delete_guest('<?php echo $guest['participant_id']; ?>');">
 						<img src="http://individual.icons-land.com/IconsPreview/BaseSoftware/PNG/16x16/DeleteRed.png">
 						<span class="tooltiptext">Remove</span>
-					</a>
+					</span>
 				<?php } ?>
 				<br/>
 			<?php } ?>
 		</td>
 		<?php if ($allow_actions) { ?>
-			<td>
+			<td class="center">
 				<a href="#" class="thickbox_custom" data-role='host' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('Add Host', 'coviu-video-calls') ?></a><br/>
 				<a href="#" class="thickbox_custom" data-role='guest' data-sessionid="<?php echo $session['session_id']; ?>"><?php _e('Add Guest', 'coviu-video-calls') ?></a><br/>
 				<!-- active sessions cannot be deleted -->
