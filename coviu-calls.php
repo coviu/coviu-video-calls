@@ -70,6 +70,7 @@ function cvu_setup_options() {
 	$options = new stdClass();
 	$options->api_key = '';
 	$options->api_key_secret = '';
+	$options->embed_participant_pages = false;
 
 	add_option('coviu-video-calls', $options);
 }
@@ -77,6 +78,43 @@ function cvu_setup_options() {
 register_deactivation_hook( __FILE__, 'cvu_teardown_options' );
 function cvu_teardown_options() {
 	delete_option('coviu-video-calls');
+}
+
+add_action( 'init', 'create_post_type' );
+function create_post_type() {
+	register_post_type( 'cvu_session',
+		array(
+			'labels' => array(
+				'name' => __( 'Coviu Sessions' ),
+				'singular_name' => __( 'Coviu Session' )
+			),
+			'public' => true,
+			'exclude_from_search' => true,
+			'show_in_menu' => false,
+			'show_in_nav_menus' => false,
+			'has_archive' => false,
+			'rewrite' => false,
+			'can_export' => false
+		)
+	);
+}
+
+add_filter( 'posttype_rewrite_rules', 'cvu_add_permastruct' );
+function cvu_add_permastruct( $rules ) {
+    $struct = '/%posttype%/%postname%/';
+
+    global $wp_rewrite;
+    $rules = $wp_rewrite->generate_rewrite_rules(
+        $struct,
+        EP_PERMALINK,
+        false,
+        true,
+        true,
+        false,
+        true
+    );
+
+    return $rules;
 }
 
 /// ***   Admin Settings Page   *** ///
@@ -174,7 +212,7 @@ function cvu_settings_page() {
 			print 'Sorry, your nonce did not verify.';
 			exit;
 
-		} elseif ($_POST['coviu']['action'] == 'credentials') {
+		} elseif ($_POST['coviu']['action'] == 'settings') {
 			// clean up entered data from surplus white space
 			$_POST['coviu']['api_key']        = trim(sanitize_text_field($_POST['coviu']['api_key']));
 			$_POST['coviu']['api_key_secret'] = trim(sanitize_text_field($_POST['coviu']['api_key_secret']));
@@ -187,11 +225,12 @@ function cvu_settings_page() {
 				// updating credentials
 				$options->api_key    = $_POST['coviu']['api_key'];
 				$options->api_key_secret = $_POST['coviu']['api_key_secret'];
+				$options->embed_participant_pages = $_POST['coviu']['embed_participant_pages'];
 				update_option('coviu-video-calls', $options);
 
 				?>
 				<div class="updated">
-					<p><strong><?php echo __('Stored credentials.', 'coviu-video-calls'); ?></strong></p>
+					<p><strong><?php echo __('Stored settings.', 'coviu-video-calls'); ?></strong></p>
 				</div>
 				<?php
 			}
@@ -204,7 +243,7 @@ function cvu_settings_page() {
 		<h2><?php _e('Coviu Video Calls Settings', 'coviu-video-calls'); ?></h2>
 
 		<!-- DISPLAY CREDENTIALS FORM -->
-		<h3><?php _e('Credentials', 'coviu-video-calls'); ?></h3>
+
 		<p>
 			To use Coviu Video Calls, you need to sign up for a <a href="https://coviu.com/checkout/team?plan-type=api-plan" target="_blank">developer account</a> and get yourself credentials for accessing the API.
 		</p>
@@ -221,8 +260,9 @@ function cvu_credentials_form( $actionurl, $options ) {
 	?>
 	<form id="credentials" method="post" action="<?php echo $actionurl; ?>">
 		<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
-		<input type="hidden" name="coviu[action]" value="credentials" />
+		<input type="hidden" name="coviu[action]" value="settings" />
 
+		<h3><?php _e('Credentials', 'coviu-video-calls'); ?></h3>
 		<p>
 			<?php _e('API Key:', 'coviu-video-calls'); ?>
 			<input type="text" name="coviu[api_key]" value="<?php echo $options->api_key ?>"/>
@@ -230,6 +270,11 @@ function cvu_credentials_form( $actionurl, $options ) {
 		<p>
 			<?php _e('Password:', 'coviu-video-calls'); ?>
 			<input type="text" name="coviu[api_key_secret]" value="<?php echo $options->api_key_secret ?>"/>
+		</p>
+		<h3><?php _e('Experimental', 'coviu-video-calls'); ?></h3>
+		<p>
+			<?php _e('Embed participant pages:', 'coviu-video-calls'); ?>
+			<input type="checkbox" name="coviu[embed_participant_pages]" value="true" <?php if ($options->embed_participant_pages) echo 'checked'; ?>/>
 		</p>
 		<p class="submit">
 			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Update Credentials', 'coviu-video-calls'); ?>" />
@@ -494,18 +539,18 @@ function cvu_sessions_display( $actionurl, $options ) {
 		if (count($active_sessions) > 0) {
 			// reverse sort order to get current ones first
 			$active_sessions = array_reverse($active_sessions);
-			cvu_sessions_table('Active Appointments', $active_sessions, true);
+			cvu_sessions_table($options, 'Active Appointments', $active_sessions, true);
 		}
 
 		list($upcoming_sessions, $more) = cvu_get_upcoming_sessions($coviu, $now, $params);
 		if (count($upcoming_sessions) > 0) {
-			cvu_sessions_table('Upcoming Appointments', $upcoming_sessions, true);
+			cvu_sessions_table($options, 'Upcoming Appointments', $upcoming_sessions, true);
 			cvu_pagination('upcoming_page', $more);
 		}
 
 		list($past_sessions, $more) = cvu_get_past_sessions($coviu, $now, $params, false);
 		if (count($past_sessions) > 0) {
-			cvu_sessions_table('Past Appointments', $past_sessions, false);
+			cvu_sessions_table($options, 'Past Appointments', $past_sessions, false);
 			cvu_pagination('past_page', $more);
 		}
 	?>
@@ -572,7 +617,7 @@ function cvu_session_table_header($title, $allow_actions) {
 	<?php
 }
 
-function cvu_sessions_table($title, $sessions, $allow_actions) {
+function cvu_sessions_table($options, $title, $sessions, $allow_actions) {
 	?>
 		<h2> <?php echo $title; ?> </h2>
 		<table class="cvu_list">
@@ -580,7 +625,7 @@ function cvu_sessions_table($title, $sessions, $allow_actions) {
 			<tbody> <?php
 
 				foreach ($sessions as $session) {
-					cvu_session_display($session, $allow_actions);
+					cvu_session_display($options, $session, $allow_actions);
 				}
 
 			?> </tbody>
@@ -588,7 +633,7 @@ function cvu_sessions_table($title, $sessions, $allow_actions) {
 	<?php
 }
 
-function cvu_session_display($session, $allow_actions) {
+function cvu_session_display($options, $session, $allow_actions) {
 	$hosts = array();
 	$guests = array();
 	if (array_key_exists('participants', $session)) {
@@ -612,12 +657,13 @@ function cvu_session_display($session, $allow_actions) {
 		<td class="datetime center"><?php echo $session['end_time']->format(DateTime::ATOM); ?></td>
 		<td>
 			<?php foreach($hosts as $host) { ?>
+				<?php $url = cvu_embed_participant_page($options, $host); ?>
 				<img src="<?php echo $host['picture']; ?>" width="30px"/>
-				<span class='copy_link tooltip' data-link="<?php echo $host['entry_url']; ?>">
+				<span class='copy_link tooltip' data-link="<?php echo $url; ?>">
 					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png">
 					<span class="tooltiptext">Copy Link</span>
 				</span>
-				<a href="<?php echo $host['entry_url']; ?>">
+				<a href="<?php echo $url; ?>">
 					<?php echo $host['display_name']; ?>
 				</a>
 				<?php if ($end_time >= $now) { ?>
@@ -631,11 +677,12 @@ function cvu_session_display($session, $allow_actions) {
 		</td>
 		<td>
 			<?php foreach($guests as $guest) { ?>
-				<span class='copy_link tooltip' data-link="<?php echo $guest['entry_url']; ?>	">
+				<?php $url = cvu_embed_participant_page($options, $guest); ?>
+				<span class='copy_link tooltip' data-link="<?php echo $url; ?>	">
 					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png">
 					<span class="tooltiptext">Copy Link</span>
 				</span>
-				<a href="<?php echo $guest['entry_url']; ?>">
+				<a href="<?php echo $url; ?>">
 					<?php echo $guest['display_name']; ?>
 				</a>
 				<?php if ($end_time >= $now) { ?>
@@ -684,6 +731,30 @@ function cvu_pagination($page_number_name, $more = true) {
 			<?php } ?>
 		</span>
 	<?php
+}
+
+function cvu_embed_participant_page($options, $participant) {
+	if (!$options->embed_participant_pages) {
+		return $participant['entry_url'];
+	}
+
+	$post = get_session_post_by_name($participant['participant_id']);
+
+	if ($post == null) {
+		$content = '<iframe src="' . $participant['entry_url'] . '" style="width: 100%; border: none"></iframe>';
+		$params = array(
+			'post_content' => $content,
+			'post_name' => $participant['participant_id'],
+			'guid' => $participant['participant_id'],
+			'post_type' => 'cvu_session',
+			'post_status' => 'publish',
+		);
+		$id = wp_insert_post($params);
+
+		$post = get_post($id);
+	}
+
+	return '/?cvu_session=' . $post->post_name;
 }
 
 function cvu_guest_add( $post, $options ) {
@@ -890,4 +961,19 @@ function error($err_str) {
 
 function prettyprint($var) {
 	print '<pre>'; print_r($var); print '</pre>';
+}
+
+function get_session_post_by_name( $name ){
+	$params = array(
+		'name' => $name,
+		'post_type' => 'cvu_session',
+		'post_status' => 'any',
+		'posts_per_page' => 1,
+	);
+	$posts = get_posts($params);
+
+	if (count($posts) == 1) {
+		return null;
+	}
+	return $posts[0];
 }
