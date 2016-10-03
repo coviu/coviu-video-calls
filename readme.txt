@@ -2,8 +2,8 @@
 Contributors: silviapfeiffer1, ben.schaaf
 Tags: Coviu, video calls, webrtc, video, audio, chat, streaming, appointments, peer-to-peer
 Requires at least: 3.0
-Tested up to: 4.5.4
-Stable Tag: 0.2
+Tested up to: 4.6.1
+Stable Tag: 0.3
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -70,12 +70,6 @@ Coviu also offers Android and iOS applications in which the video calls can be h
 For more information, see https://coviu.com/downloads
 
 
-= What shortcodes are available? =
-
-The plugin currently provides no shortcodes.
-If you need any, please contact support@coviu.com.
-
-
 = What is a session? =
 
 Here are a couple of terms that we use and what they mean.
@@ -96,6 +90,23 @@ The session host has to let the session guest enter to proceed with the session.
 For example, a doctor's clinic runs a wordpress site and gets an API key from Coviu. The Clinic can then set up sessions for all of their doctors. A session is created by picking a date, start and end time and associating it with a doctor. Now the session has an owner. Guest links can now be created and shared with patients.
 
 
+= Holding sessions in Wordpress pages? =
+
+If you want to hold Coviu session on Wordpress pages rather than on a coviu.com URL,
+you will want to activate the embedding of call pages in wordpress pages.
+You do that on the 'Coviu Calls' settings page.
+After that, the links on the Appointments page go to other Wordpress pages and
+you are able to theme the layout of the page that surrounds the embedded Coviu call.
+
+
+= Wordpress user roles and Appointments =
+
+If the logged in user has a 'subscriber' role only, then they will only see their own apppointments, i.e. appointments where they are one of the hosts. Also, when they create
+a new appointemnt, the appointment will automatically have them as a host.
+All other users when logged in see all the appointments of all hosts.
+Everyone can schedule appointments for any Wordpress users.
+
+
 = Why should I use Coviu? =
 
 Coviu’s particular strength is in its focus on documents and data and its focus on keeping all the conversation and data shielded from external intrusion.
@@ -111,7 +122,13 @@ It also allows sharing of document camera input and thus the digitisation of pap
 Coviu is extensible for other shared data. If you have a use case that is not satisfied yet, contact support@coviu.com.
 
 New features are being added constantly - you can always try out Coviu with a free 'me' account at http://coviu.com/.
- 
+
+
+= What shortcodes are available? =
+
+The plugin currently provides no shortcodes.
+If you need any, please contact support@coviu.com.
+
 
 == Screenshots ==
 
