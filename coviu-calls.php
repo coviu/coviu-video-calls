@@ -134,6 +134,11 @@ function cvu_appointments_page() {
 			<?php
 			cvu_session_form( $_SERVER["REQUEST_URI"] );
 			cvu_sessions_display( $_SERVER["REQUEST_URI"], $options );
+		} else {
+			?>
+			<h2><a href="options-general.php?page=coviu-video-calls%2Fcoviu-calls.php">Start by setting up the Coviu API keys</a></h2>
+			<p>After that, you will be able to create and list appointments here.</p>
+			<?php
 		}
 		?>
 	</div>
@@ -189,7 +194,7 @@ function cvu_settings_page() {
 		<!-- DISPLAY CREDENTIALS FORM -->
 		<h3><?php _e('Credentials', 'coviu-video-calls'); ?></h3>
 		<p>
-			To use Coviu Video Calls, you need a <a href="https://www.coviu.com/developer/" target="_blank">developer account</a> and credentials for accessing the API.
+			To use Coviu Video Calls, you need to sign up for a <a href="https://coviu.com/checkout/team?plan-type=api-plan" target="_blank">developer account</a> and get yourself credentials for accessing the API.
 		</p>
 
 		<?php
