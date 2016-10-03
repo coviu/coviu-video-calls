@@ -148,6 +148,14 @@ If you need any, please contact support@coviu.com.
 * Removed all shortcodes until we know better what is required
 * Uses wordpress users to select hosts.
 
+= 0.3 =
+* appointment times now start at 15min interval
+* added image to copy room links
+* added image to delete a participant
+* different wordpress user roles see different appointment lists
+* ability to create wordpress custom post types as appointment rooms
+* added pagination on appointment lists
+
 
 == Upgrade Notice ==
 
