@@ -46,8 +46,21 @@
 
 
 defined( 'ABSPATH' ) or die( 'No script kiddies please!' );
+global $wp_version;
 
-require_once __DIR__.'/vendor/autoload.php';
+// don't use autoloader for WP4.6 compatibility; instead include specific files
+if (substr_compare($wp_version, "4.6.1", 0, 3) !== 0) {
+	require_once __DIR__.'/vendor/autoload.php';
+} else {
+	require_once __DIR__.'/vendor/coviu/coviu-sdk/src/Authenticator.php';
+	require_once __DIR__.'/vendor/coviu/coviu-sdk/src/Coviu.php';
+	require_once __DIR__.'/vendor/coviu/coviu-sdk/src/HttpException.php';
+	require_once __DIR__.'/vendor/coviu/coviu-sdk/src/OAuth2Client.php';
+	require_once __DIR__.'/vendor/coviu/coviu-sdk/src/OAuth2ClientException.php';
+	require_once __DIR__.'/vendor/coviu/coviu-sdk/src/Request.php';
+	require_once __DIR__.'/vendor/coviu/coviu-sdk/src/SessionApi.php';
+}
+
 use coviu\Api\Coviu;
 
 /// ***  Set up and remove options for plugin *** ///
@@ -120,7 +133,6 @@ function cvu_appointments_page() {
 			$action($_POST['coviu'], $options);
 		}
 	}
-
 	?>
 	<div class="wrap">
 		<h2><?php _e('Coviu Appointments', 'coviu-video-calls'); ?></h2>
