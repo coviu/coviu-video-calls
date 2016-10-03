@@ -173,7 +173,7 @@ function cvu_appointments_page() {
 	}
 	?>
 	<div class="wrap">
-		<h2><?php _e('Coviu Appointments', 'coviu-video-calls'); ?></h2>
+		<h2><?php _e('Appointments', 'coviu-video-calls'); ?></h2>
 
 		<!-- DISPLAY SESSION LIST -->
 		<?php
@@ -240,12 +240,12 @@ function cvu_settings_page() {
 	// render the settings page
 	?>
 	<div class="wrap">
-		<h2><?php _e('Coviu Video Calls Settings', 'coviu-video-calls'); ?></h2>
+		<h2><?php _e('Settings: Coviu Video Calls', 'coviu-video-calls'); ?></h2>
 
 		<!-- DISPLAY CREDENTIALS FORM -->
 
 		<p>
-			To use Coviu Video Calls, you need to sign up for a <a href="https://coviu.com/checkout/team?plan-type=api-plan" target="_blank">developer account</a> and get yourself credentials for accessing the API.
+			To use Coviu Video Calls, you need to sign up for a <a href="https://coviu.com/checkout/team?plan-type=api-plan" target="_blank">developer account</a> and create new credentials for accessing the Coviu API.
 		</p>
 
 		<?php
@@ -271,13 +271,13 @@ function cvu_credentials_form( $actionurl, $options ) {
 			<?php _e('Password:', 'coviu-video-calls'); ?>
 			<input type="text" name="coviu[api_key_secret]" value="<?php echo $options->api_key_secret ?>"/>
 		</p>
-		<h3><?php _e('Experimental', 'coviu-video-calls'); ?></h3>
+		<h3><?php _e('Customisation', 'coviu-video-calls'); ?></h3>
 		<p>
-			<?php _e('Embed participant pages:', 'coviu-video-calls'); ?>
+			<?php _e('Video call pages as wordpress pages:', 'coviu-video-calls'); ?>
 			<input type="checkbox" name="coviu[embed_participant_pages]" value="true" <?php if ($options->embed_participant_pages) echo 'checked'; ?>/>
 		</p>
 		<p class="submit">
-			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Update Credentials', 'coviu-video-calls'); ?>" />
+			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Update Settings', 'coviu-video-calls'); ?>" />
 		</p>
 	</form>
 	<?php
@@ -741,7 +741,7 @@ function cvu_embed_participant_page($options, $participant) {
 	$post = get_session_post_by_name($participant['participant_id']);
 
 	if ($post == null) {
-		$content = '<iframe src="' . $participant['entry_url'] . '" style="width: 100%; border: none"></iframe>';
+		$content = '<iframe src="' . $participant['entry_url'] . '" style="width: 100%; height: 600px; border: none"></iframe>';
 		$params = array(
 			'post_content' => $content,
 			'post_name' => $participant['participant_id'],
@@ -754,7 +754,7 @@ function cvu_embed_participant_page($options, $participant) {
 		$post = get_post($id);
 	}
 
-	return '/?cvu_session=' . $post->post_name;
+	return get_site_url() . '/?cvu_session=' . $post->post_name;
 }
 
 function cvu_guest_add( $post, $options ) {
