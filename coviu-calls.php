@@ -231,6 +231,7 @@ function cvu_session_form( $actionurl ) {
 		jQuery(document).ready(function($){
 			// Set local times to now, now + 1hour
 			var now = new Date();
+			round_up_to_quater_hour(now);
 			jQuery('#start_time').val(now.toLocalISOString());
 			now.setHours(now.getHours() + 1);
 			jQuery('#end_time').val(now.toLocalISOString());
@@ -251,6 +252,15 @@ function cvu_session_form( $actionurl ) {
 				end_time.val(local_to_utc(end).toISOString());
 			});
 		});
+
+		function round_up_to_quater_hour(date) {
+			var minutes = Math.ceil(date.getMinutes() / 15) * 15;
+			if (minutes == 60) {
+				minutes = 0;
+				date.setHours(date.getHours() + 1);
+			}
+			date.setMinutes(minutes);
+		}
 
 		function local_to_utc(date) {
 			var time = date.getTime() + date.getTimezoneOffset() * 60000;
