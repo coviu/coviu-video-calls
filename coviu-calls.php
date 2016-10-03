@@ -316,6 +316,10 @@ function cvu_sessions_display( $actionurl, $options ) {
 	<script type="text/javascript">
 		// set up thickbox function handling
 		jQuery(document).ready(function() {
+			jQuery('.copy_link').click(function() {
+				copyTextToClipboard(jQuery(this).data('link'));
+			});
+
 			jQuery('.thickbox_custom').click(function() {
 				// get params for thickbox form
 				var role = jQuery(this).data('role');
@@ -336,6 +340,36 @@ function cvu_sessions_display( $actionurl, $options ) {
 				return false;
 			});
 		});
+
+		function copyTextToClipboard(text) {
+			var textArea = jQuery('<textarea></textarea>');
+			jQuery(document.body).append(textArea);
+
+			// Make sure we can 'click' the text area
+			textArea.css('position', 'fixed');
+			textArea.css('top', 0);
+			textArea.css('left', 0);
+
+			// Make it as invisible as possible
+			textArea.css('width', '2em');
+			textArea.css('height', '2em');
+			textArea.css('padding', 0);
+			textArea.css('border', 'none');
+			textArea.css('outline', 'none');
+			textArea.css('boxShadow', 'none');
+			textArea.css('background', 'transparent');
+
+			textArea.val(text);
+			textArea.select();
+
+			try {
+				var succeded = document.execCommand('copy');
+				var msg = succeded ? 'successful' : 'unsuccessful';
+				console.log('Copying text command was ' + msg);
+			} finally {
+				textArea.remove();
+			}
+		}
 
 		function delete_session(session_id) {
 			jQuery('#session_id').val(session_id);
@@ -547,15 +581,23 @@ function cvu_session_display($session) {
 		<td>
 			<?php foreach($hosts as $host) { ?>
 				<img src="<?php echo $host['picture']; ?>" width="30px"/>
-				<a href="<?php echo $host['entry_url']; ?>"><?php echo $host['display_name']; ?>
+				<a href="<?php echo $host['entry_url']; ?>">
+					<?php echo $host['display_name']; ?>
 				</a>
+				<span class='copy_link' data-link="<?php echo $host['entry_url']; ?>">
+					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png" alt="Copy Link">
+				</span>
 				<br/>
 			<?php } ?>
 		</td>
 		<td>
 			<?php foreach($guests as $guest) { ?>
-				<a href="<?php echo $guest['entry_url']; ?>"><?php echo $guest['display_name']; ?>
+				<a href="<?php echo $guest['entry_url']; ?>">
+					<?php echo $guest['display_name']; ?>
 				</a>
+				<span class='copy_link' data-link="<?php echo $guest['entry_url']; ?>">
+					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png" alt="Copy Link">
+				</span>
 				<br/>
 			<?php } ?>
 		</td>
