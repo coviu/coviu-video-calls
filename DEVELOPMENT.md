@@ -24,7 +24,6 @@ http://teleogistic.net/2011/05/revisiting-git-github-and-the-wordpress-org-plugi
 * edit readme.txt to bump up stable tag
 * edit coviu-video-calls.php bump up stable tag there, too
 * commit to github: git push origin master (possibly after merging a branch)
-* git rebase origin/trunk (to rebase the svn trunk to current master)
 * git svn dcommit (to send commits to wordpress.org)
 * git svn tag 0.22 (add new release)
   [recently stopped working - use svn directly instead:
