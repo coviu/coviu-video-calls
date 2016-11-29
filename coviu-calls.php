@@ -111,20 +111,20 @@ function create_post_type() {
 
 add_filter( 'posttype_rewrite_rules', 'cvu_add_permastruct' );
 function cvu_add_permastruct( $rules ) {
-    $struct = '/%posttype%/%postname%/';
+	$struct = '/%posttype%/%postname%/';
 
-    global $wp_rewrite;
-    $rules = $wp_rewrite->generate_rewrite_rules(
-        $struct,
-        EP_PERMALINK,
-        false,
-        true,
-        true,
-        false,
-        true
-    );
+	global $wp_rewrite;
+	$rules = $wp_rewrite->generate_rewrite_rules(
+		$struct,
+		EP_PERMALINK,
+		false,
+		true,
+		true,
+		false,
+		true
+	);
 
-    return $rules;
+	return $rules;
 }
 
 /// ***   Admin Settings Page   *** ///
