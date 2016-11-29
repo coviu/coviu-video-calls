@@ -74,9 +74,11 @@ function cvu_setup_options() {
 
 	add_option('coviu-video-calls', $options);
 
-	$plugin_template = plugin_dir_path( __FILE__ ) . 'single-cvu_session.php';
+	$theme_default_template = get_stylesheet_directory() . '/single.php';
 	$theme_template = get_stylesheet_directory() . '/single-cvu_session.php';
-	copy($plugin_template, $theme_template);
+	copy($theme_default_template, $theme_template);
+
+	file_put_contents('/var/www/html/error.log', ob_get_contents());
 }
 
 register_deactivation_hook( __FILE__, 'cvu_teardown_options' );
@@ -84,7 +86,6 @@ function cvu_teardown_options() {
 	delete_option('coviu-video-calls');
 
 	$theme_template = get_stylesheet_directory() . '/single-cvu_session.php';
-
 	if (file_exists($theme_template)) {
 		unlink($theme_template);
 	}
