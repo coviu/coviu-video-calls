@@ -73,11 +73,20 @@ function cvu_setup_options() {
 	$options->embed_participant_pages = false;
 
 	add_option('coviu-video-calls', $options);
+
+	$theme_default_template = get_stylesheet_directory() . '/single.php';
+	$theme_template = get_stylesheet_directory() . '/single-cvu_session.php';
+	copy($theme_default_template, $theme_template);
 }
 
 register_deactivation_hook( __FILE__, 'cvu_teardown_options' );
 function cvu_teardown_options() {
 	delete_option('coviu-video-calls');
+
+	$theme_template = get_stylesheet_directory() . '/single-cvu_session.php';
+	if (file_exists($theme_template)) {
+		unlink($theme_template);
+	}
 }
 
 add_action( 'init', 'create_post_type' );
@@ -101,20 +110,20 @@ function create_post_type() {
 
 add_filter( 'posttype_rewrite_rules', 'cvu_add_permastruct' );
 function cvu_add_permastruct( $rules ) {
-    $struct = '/%posttype%/%postname%/';
+	$struct = '/%posttype%/%postname%/';
 
-    global $wp_rewrite;
-    $rules = $wp_rewrite->generate_rewrite_rules(
-        $struct,
-        EP_PERMALINK,
-        false,
-        true,
-        true,
-        false,
-        true
-    );
+	global $wp_rewrite;
+	$rules = $wp_rewrite->generate_rewrite_rules(
+		$struct,
+		EP_PERMALINK,
+		false,
+		true,
+		true,
+		false,
+		true
+	);
 
-    return $rules;
+	return $rules;
 }
 
 /// ***   Admin Settings Page   *** ///
