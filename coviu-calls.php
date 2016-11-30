@@ -77,8 +77,6 @@ function cvu_setup_options() {
 	$theme_default_template = get_stylesheet_directory() . '/single.php';
 	$theme_template = get_stylesheet_directory() . '/single-cvu_session.php';
 	copy($theme_default_template, $theme_template);
-
-	file_put_contents('/var/www/html/error.log', ob_get_contents());
 }
 
 register_deactivation_hook( __FILE__, 'cvu_teardown_options' );
