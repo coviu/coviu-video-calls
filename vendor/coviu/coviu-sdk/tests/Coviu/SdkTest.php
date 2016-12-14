@@ -16,7 +16,7 @@ class SdkTest extends PHPUnit_Framework_TestCase
     // Create a new user, team, and api key for each test, just for isolation.
     $client = self::build_session_client();
     // Our SDK with our api_key, secret test endpoint.
-    $this->coviu = new Coviu($client['clientId'], $client['secret'], self::$endpoint);
+    $this->coviu = new Coviu($client['clientId'], $client['secret'], NULL, self::$endpoint);
   }
 
   // Get all sessions for this client
@@ -226,6 +226,24 @@ class Examples
       "client_name" => "test client",
       "ownerId" => $userId,
       "scope" => ["team_api[".$teamId."]"]
+    ];
+  }
+
+  public static function application()
+  {
+    return [
+      "name" => "Test Application",
+      "homePage" => "http://www.google.com",
+      "redirectEndpoint" => "https://www.google.com",
+      "image" => "https://i.imgflip.com/1fsd2t.jpg",
+      "description" => "Short ribs hamburger bacon prosciutto jowl brisket. Biltong \
+      corned beef turducken picanha rump pig t-bone beef sausage bacon tri-tip. \
+      Pancetta andouille meatloaf, tri-tip picanha pork belly brisket turducken \
+      pork loin capicola frankfurter pastrami bresaola landjaeger. Burgdoggen \
+      t-bone shank picanha, meatball rump beef ribs corned beef tenderloin \
+      swine leberkas ham turducken doner. Pork loin short ribs short loin \
+      chicken jowl ham hock cow landjaeger andouille jerky tenderloin spare \
+      ribs pork."
     ];
   }
 }

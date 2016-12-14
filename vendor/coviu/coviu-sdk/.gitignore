@@ -3,3 +3,4 @@ help.txt
 vendor/
 tests/logs/
 tests/docker-compose.yaml
+tests/docker-compose.yml
