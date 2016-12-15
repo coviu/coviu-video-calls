@@ -62,6 +62,7 @@ if (substr_compare($wp_version, "4.6.1", 0, 3) !== 0) {
 }
 
 use coviu\Api\Coviu;
+use coviu\Api\OAuth2ClientException;
 
 /// ***  Set up and remove options for plugin *** ///
 
@@ -70,9 +71,11 @@ function cvu_setup_options() {
 	$options = new stdClass();
 	$options->api_key = '';
 	$options->api_key_secret = '';
+	$options->grant = null;
 	$options->embed_participant_pages = false;
-
-	add_option('coviu-video-calls', $options);
+	$options->oauth_url = '';
+	$options->require_oauth = false;
+	cvu_update_options($options);
 
 	$theme_default_template = get_stylesheet_directory() . '/single.php';
 	$theme_template = get_stylesheet_directory() . '/single-cvu_session.php';
@@ -82,6 +85,8 @@ function cvu_setup_options() {
 register_deactivation_hook( __FILE__, 'cvu_teardown_options' );
 function cvu_teardown_options() {
 	delete_option('coviu-video-calls');
+	// Delete metadata for coviu for all users
+	delete_metadata('user', 0, 'coviu-video-calls', '', true);
 
 	$theme_template = get_stylesheet_directory() . '/single-cvu_session.php';
 	if (file_exists($theme_template)) {
@@ -152,7 +157,9 @@ function cvu_appointments_page() {
 	}
 
 	// retrieve stored options
-	$options = get_option('coviu-video-calls');
+	$options = cvu_get_options();
+
+	$coviu = cvu_client($options);
 
 	// Always use GMT internally (matches with coviu API)
 	date_default_timezone_set('GMT');
@@ -167,6 +174,7 @@ function cvu_appointments_page() {
 
 		} else {
 			$actions = array(
+				'logout'         => 'cvu_oauth_logout',
 				'add_session'    => 'cvu_session_add',
 				'delete_session' => 'cvu_session_delete',
 				'add_guest'      => 'cvu_guest_add',
@@ -177,7 +185,7 @@ function cvu_appointments_page() {
 
 			$action = $actions[$_POST['coviu']['action']];
 
-			$action($_POST['coviu'], $options);
+			$action($_POST['coviu'], $coviu, $options);
 		}
 	}
 	?>
@@ -186,22 +194,32 @@ function cvu_appointments_page() {
 
 		<!-- DISPLAY SESSION LIST -->
 		<?php
-		if ($options->api_key != '' && $options->api_key_secret != '') {
-			?>
 
-			<h2><?php _e('Add a Video Appointment', 'coviu-video-calls'); ?></h2>
-			<?php
-			cvu_session_form( $_SERVER["REQUEST_URI"] );
-			cvu_sessions_display( $_SERVER["REQUEST_URI"], $options );
-		} else {
+		if ($options->api_key == '' || $options->api_key_secret == '') {
 			?>
 			<h2><a href="options-general.php?page=coviu-video-calls%2Fcoviu-calls.php">Start by setting up the Coviu API keys</a></h2>
 			<p>After that, you will be able to create and list appointments here.</p>
 			<?php
+		} else {
+			$show_sessions = true;
+
+			if ($options->require_oauth) {
+				$show_sessions = cvu_oauth($coviu, $options);
+			}
+
+			if ($show_sessions) {
+				?>
+				<h2><?php _e('Add a Video Appointment', 'coviu-video-calls'); ?></h2>
+				<?php
+				cvu_session_form( $_SERVER["REQUEST_URI"] );
+				cvu_sessions_display( $_SERVER["REQUEST_URI"], $coviu, $options );
+			}
 		}
 		?>
 	</div>
 	<?php
+
+	cvu_update_client($coviu, $options);
 }
 
 function cvu_settings_page() {
@@ -210,7 +228,7 @@ function cvu_settings_page() {
 	}
 
 	// retrieve stored options
-	$options = get_option('coviu-video-calls');
+	$options = cvu_get_options();
 
 	// process form data
 	if( isset($_POST['coviu']) ) {
@@ -235,7 +253,9 @@ function cvu_settings_page() {
 				$options->api_key    = $_POST['coviu']['api_key'];
 				$options->api_key_secret = $_POST['coviu']['api_key_secret'];
 				$options->embed_participant_pages = isset($_POST['coviu']['embed_participant_pages']);
-				update_option('coviu-video-calls', $options);
+				$options->oauth_url = $_POST['coviu']['oauth_url'];
+				$options->require_oauth = isset($_POST['coviu']['require_oauth']);
+				cvu_update_options($options);
 
 				?>
 				<div class="updated">
@@ -280,6 +300,17 @@ function cvu_credentials_form( $actionurl, $options ) {
 			<?php _e('Password:', 'coviu-video-calls'); ?>
 			<input type="text" name="coviu[api_key_secret]" value="<?php echo $options->api_key_secret ?>"/>
 		</p>
+		<h3><?php _e('OAuth', 'coviu-video-calls'); ?></h3>
+		<p>
+			<?php _e('Require coviu login', 'coviu-video-calls'); ?>
+			<input type="checkbox" name="coviu[require_oauth]" value="true" <?php if ($options->require_oauth) echo ' checked'; ?>/>
+		</p>
+		<p>
+			<?php _e('Authorization Flow URL', 'coviu-video-calls'); ?>
+			<input type="text" name="coviu[oauth_url]" value="<?php echo $options->oauth_url ?>"/>
+		</p>
+		<?php $url = get_admin_url(null, 'admin.php?page=coviu-appointments-menu'); ?>
+		Authorization Callback Url: <a href="<?php echo $url ?>"><?php echo $url ?></a>
 		<h3><?php _e('Customisation', 'coviu-video-calls'); ?></h3>
 		<p>
 			<?php _e('Video call pages as wordpress pages:', 'coviu-video-calls'); ?>
@@ -290,6 +321,48 @@ function cvu_credentials_form( $actionurl, $options ) {
 		</p>
 	</form>
 	<?php
+}
+
+function cvu_oauth($coviu, $options) {
+	$user_options = cvu_get_user_options();
+
+	if (isset($_GET['code'])) {
+		$code = $_GET['code'];
+
+		try {
+			$grant = $coviu->authorizationCode($code);
+			$user_options['grant'] = $grant;
+			cvu_update_user_options($user_options);
+			$coviu->setGrant($grant);
+		} catch (OAuth2ClientException $e) {
+			error(__("Failed to authenticate.", 'coviu-video-calls'));
+		}
+	}
+
+	if (!is_null($user_options['grant'])) {
+		?> Logged in with Coviu.
+		<form method="post" action="<?php echo $_SERVER["REQUEST_URI"] ?>">
+			<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
+			<input type="hidden" name="coviu[action]" value="logout" />
+			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Logout', 'coviu-video-calls'); ?>" />
+		</form>
+		<?php
+
+		return true;
+	} else {
+		?> <a href="<?php echo $options->oauth_url ?>">Login with Coviu</a> <?php
+
+		return false;
+	}
+
+}
+
+function cvu_oauth_logout($post, $coviu, $options) {
+	$user = get_current_user_id();
+
+	$user_options = cvu_get_user_options($user);
+	$user_options['grant'] = null;
+	cvu_update_user_options($user_options, $user);
 }
 
 function cvu_session_form( $actionurl ) {
@@ -376,7 +449,7 @@ function cvu_session_form( $actionurl ) {
 	<?php
 }
 
-function cvu_sessions_display( $actionurl, $options ) {
+function cvu_sessions_display( $actionurl, $coviu, $options ) {
 	// for overlays
 	add_thickbox();
 
@@ -530,9 +603,6 @@ function cvu_sessions_display( $actionurl, $options ) {
 	</style>
 
 	<?php
-		// Recover coviu
-		$coviu = new Coviu($options->api_key, $options->api_key_secret);
-
 		$now = new DateTime();
 
 		$params = array(
@@ -766,7 +836,75 @@ function cvu_embed_participant_page($options, $participant) {
 	return get_site_url() . '/?cvu_session=' . $post->post_name;
 }
 
-function cvu_guest_add( $post, $options ) {
+/**
+ * Recover a coviu API client instance.
+ * Grant is recovered from a stored cache, either for a specific user, or for the stored API key
+ * After any API calls have been performed, the client must be cleaned up with: cvu_update_client
+ */
+function cvu_client($options, $user_id = null) {
+	if (is_null($user_id)) {
+		$user_id = get_current_user_id();
+	}
+	$user_options = cvu_get_user_options($user_id);
+
+	// Get the existing grant, if it exists
+	$grant = null;
+	if ($optins->require_oauth && isset($user_options['grant'])) {
+		$grant = $user_options['grant'];
+	} else if (!is_null($options->grant)) {
+		$grant = $options->grant;
+	}
+
+	return new Coviu($options->api_key, $options->api_key_secret, $grant);
+}
+
+/// Cleanup function for cvu_client
+function cvu_update_client($coviu, $options, $user_id = null) {
+	if (is_null($user_id)) {
+		$user_id = get_current_user_id();
+	}
+	$user_options = cvu_get_user_options($user_id);
+
+	$grant = $coviu->getGrant();
+
+	if ($options->require_oauth && isset($user_options['grant'])) {
+		$user_options['grant'] = $grant;
+		return cvu_update_user_options($user_options, $user_id);
+	} else {
+		$options->grant = $grant;
+		return cvu_update_options($options);
+	}
+}
+
+function cvu_get_user_options($user_id = null) {
+	if (is_null($user_id)) {
+		$user_id = get_current_user_id();
+	}
+
+	$options = get_user_meta($user_id, 'coviu-video-calls');
+	if (empty($options)) {
+		return [];
+	}
+	return $options[0];
+}
+
+function cvu_update_user_options($options, $user_id = null) {
+	if (is_null($user_id)) {
+		$user_id = get_current_user_id();
+	}
+
+	return update_user_meta($user_id, 'coviu-video-calls', $options);
+}
+
+function cvu_update_options($options) {
+	return update_option('coviu-video-calls', $options);
+}
+
+function cvu_get_options() {
+	return get_option('coviu-video-calls');
+}
+
+function cvu_guest_add( $post, $coviu, $options ) {
 	// put together a participant
 	$participant = array(
 		'display_name' => $post['participant_name'],
@@ -774,14 +912,14 @@ function cvu_guest_add( $post, $options ) {
 		// 'state'        => 'test-state',
 	);
 
-	$added = cvu_participant_add( $options, $post['session_id'], $participant );
+	$added = cvu_participant_add( $coviu, $options, $post['session_id'], $participant );
 }
 
-function cvu_guest_delete( $post, $options ) {
-	cvu_participant_delete( $options, $post['guest_id'] );
+function cvu_guest_delete( $post, $coviu, $options ) {
+	cvu_participant_delete( $coviu, $options, $post['guest_id'] );
 }
 
-function cvu_host_add( $post, $options ) {
+function cvu_host_add( $post, $coviu, $options ) {
 	$user = get_user_by('id', $post['user_id']);
 	if (!$user) {
 		error(__("Can't add Host with non-existent user.", 'coviu-video-calls'));
@@ -798,17 +936,14 @@ function cvu_host_add( $post, $options ) {
 		'state'        => (string)($user->get('ID')),
 	);
 
-	$added = cvu_participant_add( $options, $post['session_id'], $participant );
+	$added = cvu_participant_add( $coviu, $options, $post['session_id'], $participant );
 }
 
-function cvu_host_delete( $post, $options ) {
-	cvu_participant_delete( $options, $post['host_id'] );
+function cvu_host_delete( $post, $coviu, $options ) {
+	cvu_participant_delete( $coviu, $options, $post['host_id'] );
 }
 
-function cvu_participant_add( $options, $session_id, $participant ) {
-	// Recover coviu
-	$coviu = new Coviu($options->api_key, $options->api_key_secret);
-
+function cvu_participant_add( $coviu, $options, $session_id, $participant ) {
 	// participant
 	try {
 		return $coviu->sessions->addParticipant ($session_id, $participant);
@@ -818,10 +953,7 @@ function cvu_participant_add( $options, $session_id, $participant ) {
 	}
 }
 
-function cvu_participant_delete( $options, $participant_id ) {
-	// Recover coviu
-	$coviu = new Coviu($options->api_key, $options->api_key_secret);
-
+function cvu_participant_delete( $coviu, $options, $participant_id ) {
 	try {
 		return $coviu->sessions->deleteParticipant($participant_id);
 	} catch (\Exception $e) {
@@ -830,10 +962,7 @@ function cvu_participant_delete( $options, $participant_id ) {
 	}
 }
 
-function cvu_session_add( $post, $options ) {
-	// Recover coviu
-	$coviu = new Coviu($options->api_key, $options->api_key_secret);
-
+function cvu_session_add( $post, $coviu, $options ) {
 	// created date-time objects
 	$start_time = new DateTime($post['start_time']);
 	$end_time   = new DateTime($post['end_time']);
@@ -869,15 +998,12 @@ function cvu_session_add( $post, $options ) {
 			'user_id'    => wp_get_current_user()->ID,
 			'session_id' => $session['session_id'],
 		);
-		cvu_host_add($post, $options);
+		cvu_host_add($post, $coviu, $options);
 	}
 }
 
-function cvu_session_delete( $post, $options ) {
+function cvu_session_delete( $post, $coviu, $options ) {
 	$session_id = $post['session_id'];
-
-	// Recover coviu
-	$coviu = new Coviu($options->api_key, $options->api_key_secret);
 
 	// delete the session
 	try {
