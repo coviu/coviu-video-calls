@@ -9,16 +9,16 @@
     "packages": [
         {
             "name": "coviu/coviu-sdk",
-            "version": "1.1.0",
+            "version": "1.1.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/coviu/coviu-php-sdk.git",
-                "reference": "d2c25388cf4718546ef99f74aa565bb205b27ce0"
+                "reference": "2bd6696f88ffb55c2c4746caa478b2af13491c95"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/coviu/coviu-php-sdk/zipball/d2c25388cf4718546ef99f74aa565bb205b27ce0",
-                "reference": "d2c25388cf4718546ef99f74aa565bb205b27ce0",
+                "url": "https://api.github.com/repos/coviu/coviu-php-sdk/zipball/2bd6696f88ffb55c2c4746caa478b2af13491c95",
+                "reference": "2bd6696f88ffb55c2c4746caa478b2af13491c95",
                 "shasum": ""
             },
             "require": {
@@ -50,7 +50,7 @@
             ],
             "description": "A simple library to use the Coviu API.",
             "homepage": "https://github.com/coviu/coviu-php-sdk",
-            "time": "2016-12-14 00:24:49"
+            "time": "2016-12-19 18:47:30"
         },
         {
             "name": "rmccue/requests",

@@ -7,6 +7,7 @@ class Coviu
   public $client;
   public $authenticator;
   public $sessions;
+  public $user;
 
   public function __construct($api_key, $key_secret, $grant = NULL, $endpoint = 'https://api.coviu.com/v1', $auto_run = true, $throw_on_failure = true)
   {
@@ -15,12 +16,15 @@ class Coviu
 
     $this->authenticator = new Authenticator($this->client, $grant);
     $this->sessions = new SessionApi($base->auth($this->authenticator));
+    $this->user = new UserApi($base->auth($this->authenticator));
     if ($auto_run)
     {
       $this->sessions = new RunDecorator($this->sessions);
+      $this->user = new RunDecorator($this->user);
       if ($throw_on_failure)
       {
         $this->sessions = new ThrowDecorator($this->sessions);
+        $this->user = new ThrowDecorator($this->user);
       }
     }
   }

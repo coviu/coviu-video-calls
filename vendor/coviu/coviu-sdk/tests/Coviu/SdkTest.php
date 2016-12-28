@@ -149,6 +149,14 @@ class SdkTest extends PHPUnit_Framework_TestCase
     }
   }
 
+  public function testCanGetAuthorizedTeam()
+  {
+    $req = Request::request(self::$endpoint);
+    $client = new OAuth2Client(self::$api_key, self::$key_secret, $req);
+    $team = $this->coviu->user->getAuthorizedTeam();
+    $this->assertEquals($team['name'], 'Test Team');
+  }
+
   // The above api key and secret allows us to create users, and new api keys.
   // Here we're doing that so each test occurs in isolation.
   public static function build_session_client()
