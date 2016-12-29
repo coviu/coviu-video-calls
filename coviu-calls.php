@@ -278,14 +278,14 @@ function cvu_settings_page() {
 		</p>
 
 		<?php
-			cvu_credentials_form( $_SERVER["REQUEST_URI"], $options );
+			cvu_settings_form( $_SERVER["REQUEST_URI"], $options );
 		?>
 	</div>
 	<?php
 
 }
 
-function cvu_credentials_form( $actionurl, $options ) {
+function cvu_settings_form( $actionurl, $options ) {
 	?>
 	<form id="credentials" method="post" action="<?php echo $actionurl; ?>">
 		<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
