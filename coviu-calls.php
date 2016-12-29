@@ -842,9 +842,6 @@ function cvu_embed_participant_page($options, $participant) {
  * After any API calls have been performed, the client must be cleaned up with: cvu_update_client
  */
 function cvu_client($options, $user_id = null) {
-	if (is_null($user_id)) {
-		$user_id = get_current_user_id();
-	}
 	$user_options = cvu_get_user_options($user_id);
 
 	// Get the existing grant, if it exists
@@ -860,9 +857,6 @@ function cvu_client($options, $user_id = null) {
 
 /// Cleanup function for cvu_client
 function cvu_update_client($coviu, $options, $user_id = null) {
-	if (is_null($user_id)) {
-		$user_id = get_current_user_id();
-	}
 	$user_options = cvu_get_user_options($user_id);
 
 	$grant = $coviu->getGrant();
