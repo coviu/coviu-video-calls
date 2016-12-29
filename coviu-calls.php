@@ -75,6 +75,7 @@ function cvu_setup_options() {
 	$options->embed_participant_pages = false;
 	$options->oauth_url = '';
 	$options->require_oauth = false;
+	$options->oauth_team;
 	cvu_update_options($options);
 
 	$theme_default_template = get_stylesheet_directory() . '/single.php';
@@ -301,6 +302,12 @@ function cvu_settings_form( $actionurl, $options ) {
 			<input type="text" name="coviu[api_key_secret]" value="<?php echo $options->api_key_secret ?>"/>
 		</p>
 		<h3><?php _e('OAuth', 'coviu-video-calls'); ?></h3>
+		<?php if ($options->oauth_team != null) { ?>
+			<?php $link = cvu_oauth_team_url($options); ?>
+			<h5><?php _e('Authorized With:', 'coviu-video-calls') ?> <?php echo $link ?></h5>
+		<?php } else { ?>
+			<h5><?php _e('Pending Team Authorization') ?></h5>
+		<?php } ?>
 		<p>
 			<?php _e('Require coviu login', 'coviu-video-calls'); ?>
 			<input type="checkbox" name="coviu[require_oauth]" value="true" <?php if ($options->require_oauth) echo ' checked'; ?>/>
@@ -326,19 +333,13 @@ function cvu_settings_form( $actionurl, $options ) {
 function cvu_oauth($coviu, $options) {
 	$user_options = cvu_get_user_options();
 
-	if (isset($_GET['code'])) {
+	if (isset($_GET['code']) && is_null($user_options['grant'])) {
 		$code = $_GET['code'];
 
-		try {
-			$grant = $coviu->authorizationCode($code);
-			$user_options['grant'] = $grant;
-			cvu_update_user_options($user_options);
-			$coviu->setGrant($grant);
-		} catch (OAuth2ClientException $e) {
-			error(__("Failed to authenticate.", 'coviu-video-calls'));
-		}
+		cvu_oauth_login($coviu, $options, $user_options, $code);
 	}
 
+	$user_options = cvu_get_user_options();
 	if (!is_null($user_options['grant'])) {
 		?> Logged in with Coviu.
 		<form method="post" action="<?php echo $_SERVER["REQUEST_URI"] ?>">
@@ -354,7 +355,34 @@ function cvu_oauth($coviu, $options) {
 
 		return false;
 	}
+}
 
+function cvu_oauth_login($coviu, $options, $user_options, $code) {
+	try {
+		$grant = $coviu->authorizationCode($code);
+	} catch (OAuth2ClientException $e) {
+		error(__("Failed to authenticate.", 'coviu-video-calls'));
+		return;
+	}
+
+	// Keep track of old grant, in case we need to
+	$old_grant = $coviu->getGrant();
+	$coviu->setGrant($grant);
+
+	$team = $coviu->user->getAuthorizedTeam();
+
+	if (is_null($options->oauth_team)) {
+		$options->oauth_team = $team;
+		cvu_update_options($options);
+	} else if ($team['team_id'] != $options->oauth_team['team_id']) {
+		$link = cvu_oauth_team_url($options);
+		error(__("Must be on the team: '".$link."'", 'coviu-video-calls'));
+		$coviu->setGrant($old_grant);
+		return;
+	}
+
+	$user_options['grant'] = $grant;
+	cvu_update_user_options($user_options);
 }
 
 function cvu_oauth_logout($post, $coviu, $options) {
@@ -836,6 +864,12 @@ function cvu_embed_participant_page($options, $participant) {
 	return get_site_url() . '/?cvu_session=' . $post->post_name;
 }
 
+function cvu_oauth_team_url($options) {
+	$path = 'https://'.$options->oauth_team['subdomain'].'.coviu.com/team';
+	$name = $options->oauth_team['name'];
+	return '<a href="'.$path.'">'.$name.'</a>';
+}
+
 /**
  * Recover a coviu API client instance.
  * Grant is recovered from a stored cache, either for a specific user, or for the stored API key
@@ -846,7 +880,7 @@ function cvu_client($options, $user_id = null) {
 
 	// Get the existing grant, if it exists
 	$grant = null;
-	if ($optins->require_oauth && isset($user_options['grant'])) {
+	if ($options->require_oauth && isset($user_options['grant'])) {
 		$grant = $user_options['grant'];
 	} else if (!is_null($options->grant)) {
 		$grant = $options->grant;
