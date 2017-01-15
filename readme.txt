@@ -157,6 +157,10 @@ If you need any, please contact support@coviu.com.
 * added pagination on appointment lists
 * support for wordpress 4.6
 
+= 0.4 =
+* add default post template single-cvu_session.php
+* add optional coviu OAuth login requirement for users
+* cache API grants globally for the API key and individually for users
 
 == Upgrade Notice ==
 
@@ -164,4 +168,7 @@ If you need any, please contact support@coviu.com.
 Make sure to use the new API starting at this version.
 
 = 0.3 =
-Will now work with wordpress 4.6
+Will now work with wordpress 4.6.
+
+= 0.4 =
+Add support for a new Coviu OAuth for team users.
