@@ -287,7 +287,7 @@ function cvu_settings_page() {
 			</p>
 			<p>
 			<?php _e('More information:', 'coviu-video-calls'); ?>
-			<a href="https://intercom.help/coviu/api-information">Coviu API</a>
+			<a href="https://help.coviu.com/api-information">Coviu API</a>
 			</p>
 		</div>
 
@@ -346,7 +346,7 @@ function cvu_settings_form( $actionurl, $options ) {
 		<div class="postbox">
 			<h2><?php _e('Partner Application', 'coviu-video-calls'); ?></h2>
 
-			<p><?php _e('If you don\'t want to pay Coviu per session, but rather want users registered for a certain Coviu Team account to be able to schedule sessions on this Wordpress site, activate this section. Otherwise ignore it.', 'coviu-video-calls'); ?></p>
+			<p><?php _e('If you don\'t want to pay Coviu per session, but rather want users registered and already paying for a Coviu Team account to be able to schedule sessions on this Wordpress site, activate this section. Otherwise ignore it.', 'coviu-video-calls'); ?></p>
 
 			<p>
 				<?php _e('Use Coviu as partner application:', 'coviu-video-calls'); ?>
