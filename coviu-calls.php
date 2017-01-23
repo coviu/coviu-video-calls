@@ -89,8 +89,7 @@ function cvu_setup_options() {
 register_deactivation_hook( __FILE__, 'cvu_teardown_options' );
 function cvu_teardown_options() {
 	delete_option('coviu-video-calls');
-	// Delete metadata for coviu for all users
-	delete_metadata('user', 0, 'coviu-video-calls', '', true);
+	cvu_delete_user_options();
 }
 
 add_action( 'init', 'create_post_type' );
@@ -248,13 +247,22 @@ function cvu_settings_page() {
 			if ( !$_POST['coviu']['api_key'] || !$_POST['coviu']['api_key_secret'] ) {
 				error( __('Missing API credentials.', 'coviu-video-calls') );
 			} else {
+				$api_key        = $_POST['coviu']['api_key'];
+				$api_key_secret = $_POST['coviu']['api_key_secret'];
+
+				// Changing the API key needs to reset authentication
+				if ($api_key != $options->api_key || $api_key_secret != $options->api_key_secret) {
+					$options->grant = null;
+					$options->oauth_team = null;
+					cvu_delete_user_options();
+				}
 
 				// updating credentials
-				$options->api_key    = $_POST['coviu']['api_key'];
-				$options->api_key_secret = $_POST['coviu']['api_key_secret'];
+				$options->api_key                 = $api_key;
+				$options->api_key_secret          = $api_key_secret;
 				$options->embed_participant_pages = isset($_POST['coviu']['embed_participant_pages']);
-				$options->oauth_url = $_POST['coviu']['oauth_url'];
-				$options->require_oauth = isset($_POST['coviu']['require_oauth']);
+				$options->oauth_url               = $_POST['coviu']['oauth_url'];
+				$options->require_oauth           = isset($_POST['coviu']['require_oauth']);
 				cvu_update_options($options);
 
 				?>
@@ -1004,6 +1012,10 @@ function cvu_update_options($options) {
 
 function cvu_get_options() {
 	return get_option('coviu-video-calls');
+}
+
+function cvu_delete_user_options() {
+	delete_metadata('user', 0, 'coviu-video-calls', '', true);
 }
 
 function cvu_guest_add( $post, $coviu, $options ) {
