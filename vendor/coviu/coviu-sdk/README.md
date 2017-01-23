@@ -174,3 +174,21 @@ array(8) {
 ```
 
 There's a full set of api documents provided with api source for the `coviu-sdk-api` npm module at /src/SessionApi.php
+
+OAuth2
+======
+
+Coviu implements the OAuth2 authorization code flow https://tools.ietf.org/html/rfc6749#section-4.1. Coviu requires that you
+register you `redirect_url` ahead of time in `Applications` section of your api team account. Once a user
+has returned with a authorization code, you may recover the access token and refresh token by using the `authorizationCode`
+
+```
+$client = new Coviu($api_key, $key_secret);
+$grant = $client->authorizationCode($code);
+
+// Now create a client that acts on behalf of the user
+$client2 = new Coviu($api_key, $key_secret, $grant);
+
+// Get that user's scheduled sessions
+$res = $client2->sessions->getSessions();
+```

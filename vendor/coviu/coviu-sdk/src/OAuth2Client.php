@@ -44,9 +44,19 @@ class OAuth2Client
     return $this->base->body(['grant_type' => 'client_credentials']);
   }
 
+  public function passwordAccess( $username, $password )
+  {
+    return $this->base->body(['grant_type' => 'password', 'username' => $username, 'password' => $password]);
+  }
+
   public function refreshAccessToken( $refresh_token )
   {
     return $this->base->body(['grant_type' => 'refresh_token', 'refresh_token' => $refresh_token]);
+  }
+
+  public function authorizationCode( $code )
+  {
+    return $this->base->body(['grant_type' => 'authorization_code', 'code' => $code]);
   }
 
   private function basicAuth()

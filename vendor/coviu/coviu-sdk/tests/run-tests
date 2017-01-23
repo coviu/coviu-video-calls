@@ -28,10 +28,9 @@ services_down
 services_up
 
 # Block in case we are running in the context of docker-proxy
-sleep 5
+sleep 20
 curl http://localhost:9400/index.html
 curl http://localhost:9400/v1/clyde/status
 curl http://localhost:9400/v1/coviu/status
-curl http://localhost:9400/v1/rockefeller/status
 
 ./vendor/bin/phpunit
