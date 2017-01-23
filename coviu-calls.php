@@ -59,6 +59,7 @@ if (substr_compare($wp_version, "4.6.1", 0, 3) !== 0) {
 	require_once __DIR__.'/vendor/coviu/coviu-sdk/src/OAuth2ClientException.php';
 	require_once __DIR__.'/vendor/coviu/coviu-sdk/src/Request.php';
 	require_once __DIR__.'/vendor/coviu/coviu-sdk/src/SessionApi.php';
+	require_once __DIR__.'/vendor/coviu/coviu-sdk/src/UserApi.php';
 }
 
 use coviu\Api\Coviu;
@@ -75,12 +76,14 @@ function cvu_setup_options() {
 	$options->embed_participant_pages = false;
 	$options->oauth_url = '';
 	$options->require_oauth = false;
-	$options->oauth_team;
+	$options->oauth_team = null;
 	cvu_update_options($options);
 
 	$theme_default_template = get_stylesheet_directory() . '/single.php';
 	$theme_template = get_stylesheet_directory() . '/single-cvu_session.php';
-	copy($theme_default_template, $theme_template);
+	if (!file_exists($theme_template)) {
+		copy($theme_default_template, $theme_template);
+	}
 }
 
 register_deactivation_hook( __FILE__, 'cvu_teardown_options' );
@@ -88,11 +91,6 @@ function cvu_teardown_options() {
 	delete_option('coviu-video-calls');
 	// Delete metadata for coviu for all users
 	delete_metadata('user', 0, 'coviu-video-calls', '', true);
-
-	$theme_template = get_stylesheet_directory() . '/single-cvu_session.php';
-	if (file_exists($theme_template)) {
-		unlink($theme_template);
-	}
 }
 
 add_action( 'init', 'create_post_type' );
@@ -150,6 +148,7 @@ function cvu_appointments_menu() {
 function cvu_register_admin_scripts() {
 	wp_enqueue_style( 'jquery-ui-datepicker' , '//ajax.googleapis.com/ajax/libs/jqueryui/1.10.4/themes/smoothness/jquery-ui.css');
 	wp_enqueue_script( 'jquery-ui-datepicker' );
+	wp_enqueue_style( 'cvu-admin', plugins_url('coviu-video-calls/coviu-calls.css'));
 }
 
 function cvu_appointments_page() {
@@ -269,15 +268,30 @@ function cvu_settings_page() {
 
 	// render the settings page
 	?>
-	<div class="wrap">
+	<div class="wrap cvc-wrap">
 		<h2><?php _e('Settings: Coviu Video Calls', 'coviu-video-calls'); ?></h2>
 
+		<div class="postbox">
+			<h2><span><?php esc_attr_e( 'About', 'coviu-video-calls' ); ?></span></h2>
+			<p>
+			<?php _e(
+				'Coviu Video Calls allows you to add appointment bookings of live video calls to your Website.',
+				'coviu-video-calls'
+				); ?>
+			</p>
+			<p>
+			<?php _e(
+				'As a result, you get two types of links to a video room: those of an owner who enters the room without knocking, and those of a guest who has to knock.',
+				'coviu-video-calls'
+			); ?>
+			</p>
+			<p>
+			<?php _e('More information:', 'coviu-video-calls'); ?>
+			<a href="https://help.coviu.com/api-information">Coviu API</a>
+			</p>
+		</div>
+
 		<!-- DISPLAY CREDENTIALS FORM -->
-
-		<p>
-			To use Coviu Video Calls, you need to sign up for a <a href="https://coviu.com/checkout/team?plan-type=api-plan" target="_blank">developer account</a> and create new credentials for accessing the Coviu API.
-		</p>
-
 		<?php
 			cvu_settings_form( $_SERVER["REQUEST_URI"], $options );
 		?>
@@ -292,40 +306,100 @@ function cvu_settings_form( $actionurl, $options ) {
 		<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
 		<input type="hidden" name="coviu[action]" value="settings" />
 
-		<h3><?php _e('Credentials', 'coviu-video-calls'); ?></h3>
-		<p>
-			<?php _e('API Key:', 'coviu-video-calls'); ?>
-			<input type="text" name="coviu[api_key]" value="<?php echo $options->api_key ?>"/>
-		</p>
-		<p>
-			<?php _e('Password:', 'coviu-video-calls'); ?>
-			<input type="text" name="coviu[api_key_secret]" value="<?php echo $options->api_key_secret ?>"/>
-		</p>
-		<h3><?php _e('OAuth', 'coviu-video-calls'); ?></h3>
-		<?php if ($options->oauth_team != null) { ?>
-			<?php $link = cvu_oauth_team_url($options); ?>
-			<h5><?php _e('Authorized With:', 'coviu-video-calls') ?> <?php echo $link ?></h5>
-		<?php } else { ?>
-			<h5><?php _e('Pending Team Authorization') ?></h5>
-		<?php } ?>
-		<p>
-			<?php _e('Require coviu login', 'coviu-video-calls'); ?>
-			<input type="checkbox" name="coviu[require_oauth]" value="true" <?php if ($options->require_oauth) echo ' checked'; ?>/>
-		</p>
-		<p>
-			<?php _e('Authorization Flow URL', 'coviu-video-calls'); ?>
-			<input type="text" name="coviu[oauth_url]" value="<?php echo $options->oauth_url ?>"/>
-		</p>
-		<?php $url = get_admin_url(null, 'admin.php?page=coviu-appointments-menu'); ?>
-		Authorization Callback Url: <a href="<?php echo $url ?>"><?php echo $url ?></a>
-		<h3><?php _e('Customisation', 'coviu-video-calls'); ?></h3>
-		<p>
-			<?php _e('Video call pages as wordpress pages:', 'coviu-video-calls'); ?>
-			<input type="checkbox" name="coviu[embed_participant_pages]" value="true" <?php if ($options->embed_participant_pages) echo 'checked'; ?>/>
-		</p>
+		<div class="postbox">
+			<h3><?php _e('Setup', 'coviu-video-calls'); ?></h3>
+			<p>
+				<?php esc_attr_e(
+					'Sign up for a',
+					'coviu-video-calls'
+				); ?>
+				<a href="https://coviu.com/checkout/team?plan-type=api-plan" target="_blank"><?php _e('developer account', 'coviu-video-calls'); ?></a>
+				<?php esc_attr_e(
+					'and create new credentials for accessing the Coviu API.',
+					'coviu-video-calls'
+				); ?>
+			</p>
+			<p>
+				<?php _e('API Key:', 'coviu-video-calls'); ?>
+				<input type="text" name="coviu[api_key]" value="<?php echo $options->api_key ?>"/>
+			</p>
+			<p>
+				<?php _e('Password:', 'coviu-video-calls'); ?>
+				<input type="text" name="coviu[api_key_secret]" value="<?php echo $options->api_key_secret ?>"/>
+			</p>
+		</div>
+
+		<div class="postbox">
+			<h2><?php _e('Customisation', 'coviu-video-calls'); ?></h2>
+			<p>
+				<p>
+				<?php _e(
+					'Your appointments can either link into a full-screen Coviu room, or you can have Coviu rooms rendered inside a Wordpress page with your branding around it. Note that screensharing will not work when video calls are inside Wordpress pages.',
+					'coviu-video-calls'
+					); ?>
+				</p>
+				<?php _e('Video calls as Wordpress pages:', 'coviu-video-calls'); ?>
+				<input type="checkbox" name="coviu[embed_participant_pages]" value="true" <?php if ($options->embed_participant_pages) echo 'checked'; ?>/>
+			</p>
+		</div>
+
+		<div class="postbox">
+			<h2><?php _e('Partner Application', 'coviu-video-calls'); ?></h2>
+
+			<p><?php _e('If you don\'t want to pay Coviu per session, but rather want users registered and already paying for a Coviu Team account to be able to schedule sessions on this Wordpress site, activate this section. Otherwise ignore it.', 'coviu-video-calls'); ?></p>
+
+			<p>
+				<?php _e('Use Coviu as partner application:', 'coviu-video-calls'); ?>
+				<input type="checkbox" name="coviu[require_oauth]" value="true" <?php if ($options->require_oauth) echo ' checked'; ?>/>
+			</p>
+
+			<div id="require_oauth">
+				<h4>Steps to complete:</h4>
+				<ul style="list-style-type: circle; padding-left:20px;">
+					<li>
+						<?php _e('Start by registering your Wordpress site as an application in your '); ?>
+						<a href="https://coviu.com/" target="_blank"><?php _e('Coviu developer account.', 'coviu-video-calls'); ?></a>
+
+					</li>
+					<li>
+						<?php _e('Provide it with the below Authorization Callback URL.'); ?>
+					</li>
+					<li>
+						<?php _e('Then copy the Authorization Flow URL that it provides you with below and save your settings.',
+						'coviu-video-calls'); ?>
+					</li>
+				</ul>
+				<p>
+					<?php
+					$url = get_admin_url(null, 'admin.php?page=coviu-appointments-menu');
+					_e('Authorization Callback Url:', 'coviu-video-calls');
+					?>
+					<a href="<?php echo $url ?>"><?php echo $url ?></a>
+				</p>
+				<p>
+					<?php _e('Authorization Flow URL:', 'coviu-video-calls'); ?>
+					<input type="text" name="coviu[oauth_url]" value="<?php echo $options->oauth_url ?>"/>
+				</p>
+				<p>
+				<?php
+					_e('FYI: The first user to connect their Coviu team user to this Wordpress site will connect the Coviu Team account. Subsequent users to authenticate with Coviu all have to be from that same team account.',
+						'coviu-video-calls');
+				?>
+				</p>
+				<?php if ($options->oauth_team != null) { ?>
+					<?php $link = cvu_oauth_team_url($options); ?>
+					<h5><?php _e('Authorized With:', 'coviu-video-calls') ?> <?php echo $link ?></h5>
+				<?php } else { ?>
+					<h5><?php _e('No Team linked with') ?></h5>
+				<?php } ?>
+
+			</div>
+		</div>
+
 		<p class="submit">
-			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Update Settings', 'coviu-video-calls'); ?>" />
+			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Save Settings', 'coviu-video-calls'); ?>" />
 		</p>
+
 	</form>
 	<?php
 }
@@ -341,11 +415,11 @@ function cvu_oauth($coviu, $options) {
 
 	$user_options = cvu_get_user_options();
 	if (!is_null($user_options['grant'])) {
-		?> Logged in with Coviu.
+		?> Connected to Coviu.
 		<form method="post" action="<?php echo $_SERVER["REQUEST_URI"] ?>">
 			<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
 			<input type="hidden" name="coviu[action]" value="logout" />
-			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Logout', 'coviu-video-calls'); ?>" />
+			<input name="Submit" type="submit" class="button-primary" value="<?php _e('Disconnect', 'coviu-video-calls'); ?>" />
 		</form>
 		<?php
 
