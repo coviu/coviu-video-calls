@@ -2,8 +2,8 @@
 Contributors: silviapfeiffer1, ben.schaaf
 Tags: Coviu, video calls, webrtc, video, audio, chat, streaming, appointments, peer-to-peer
 Requires at least: 3.0
-Tested up to: 4.6.1
-Stable Tag: 0.3
+Tested up to: 4.7.1
+Stable Tag: 0.4
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,7 +23,9 @@ Hosts are wordpress users that can schedule appointments, users can be anyone.
 
 The host will typically enter from within your Wordpress instance. As a host enters their room, they will be notified of participants/guests trying to join their room for a video call as these guests are "knocking" to ask to enter when they go to their appointment URL.
 
-Home page: http://www.coviu.com/
+Home page: https://www.coviu.com/
+
+More information: https://help.coviu.com/
 
 
 == Installation ==
@@ -161,6 +163,8 @@ If you need any, please contact support@coviu.com.
 * add default post template single-cvu_session.php
 * add optional coviu OAuth login requirement for users
 * cache API grants globally for the API key and individually for users
+* update to settings pages
+* support for wordpress 4.7
 
 == Upgrade Notice ==
 
