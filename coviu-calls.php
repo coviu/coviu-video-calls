@@ -354,18 +354,21 @@ function cvu_settings_form( $actionurl, $options ) {
 			</p>
 
 			<div id="require_oauth">
-				<p>
-				<?php
-					_e('Start by registering your Wordpress site as an application in your Coviu API account. Provide it with the below Authorization Callback URL. Then copy the Authorization Flow URL that it provides you with here and save your settings.',
-						'coviu-video-calls');
-				?>
-				</p>
-				<p>
-				<?php
-					_e('The first user to connect their Coviu team user to this Wordpress site will connect the Coviu Team account. Subsequent users to authenticate with Coviu all have to be from that same team account.',
-						'coviu-video-calls');
-				?>
-				</p>
+				<h4>Steps to complete:</h4>
+				<ul style="list-style-type: circle; padding-left:20px;">
+					<li>
+						<?php _e('Start by registering your Wordpress site as an application in your '); ?>
+						<a href="https://coviu.com/" target="_blank"><?php _e('Coviu developer account.', 'coviu-video-calls'); ?></a>
+
+					</li>
+					<li>
+						<?php _e('Provide it with the below Authorization Callback URL.'); ?>
+					</li>
+					<li>
+						<?php _e('Then copy the Authorization Flow URL that it provides you with below and save your settings.',
+						'coviu-video-calls'); ?>
+					</li>
+				</ul>
 				<p>
 					<?php
 					$url = get_admin_url(null, 'admin.php?page=coviu-appointments-menu');
@@ -376,6 +379,12 @@ function cvu_settings_form( $actionurl, $options ) {
 				<p>
 					<?php _e('Authorization Flow URL:', 'coviu-video-calls'); ?>
 					<input type="text" name="coviu[oauth_url]" value="<?php echo $options->oauth_url ?>"/>
+				</p>
+				<p>
+				<?php
+					_e('FYI: The first user to connect their Coviu team user to this Wordpress site will connect the Coviu Team account. Subsequent users to authenticate with Coviu all have to be from that same team account.',
+						'coviu-video-calls');
+				?>
 				</p>
 				<?php if ($options->oauth_team != null) { ?>
 					<?php $link = cvu_oauth_team_url($options); ?>
