@@ -499,8 +499,8 @@ function cvu_session_form( $actionurl ) {
 				// because Javascript sure isn't going to do it
 				var start = new Date(jQuery('#start_time').val());
 				var end = new Date(jQuery('#end_time').val());
-				start_time.val(local_to_utc(start).toISOString());
-				end_time.val(local_to_utc(end).toISOString());
+				start_time.val(start.toISOString());
+				end_time.val(end.toISOString());
 			});
 		});
 
@@ -511,13 +511,6 @@ function cvu_session_form( $actionurl ) {
 				date.setHours(date.getHours() + 1);
 			}
 			date.setMinutes(minutes);
-		}
-
-		function local_to_utc(date) {
-			var time = date.getTime() + date.getTimezoneOffset() * 60000;
-			var out = new Date();
-			out.setTime(time);
-			return out;
 		}
 
 		// Javascript is absolute garbage
