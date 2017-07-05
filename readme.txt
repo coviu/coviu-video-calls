@@ -2,8 +2,8 @@
 Contributors: silviapfeiffer1, ben.schaaf
 Tags: Coviu, video calls, webrtc, video, audio, chat, streaming, appointments, peer-to-peer
 Requires at least: 3.0
-Tested up to: 4.7.1
-Stable Tag: 0.4
+Tested up to: 4.8
+Stable Tag: 0.5
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -166,6 +166,10 @@ If you need any, please contact support@coviu.com.
 * update to settings pages
 * support for wordpress 4.7
 
+= 0.5 =
+* fix a timezone bug
+* support for wordpress 4.8
+
 == Upgrade Notice ==
 
 = 2.0 =
@@ -176,3 +180,6 @@ Will now work with wordpress 4.6.
 
 = 0.4 =
 Add support for a new Coviu OAuth for team users.
+
+= 0.5 =
+Fixes a timezone bug and work with wordpress 4.8.
