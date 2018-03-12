@@ -843,7 +843,7 @@ function cvu_session_display($options, $session, $allow_actions) {
 				<?php $url = cvu_embed_participant_page($options, $host); ?>
 				<img src="<?php echo $host['picture']; ?>" width="30px"/>
 				<span class='copy_link tooltip' data-link="<?php echo $url; ?>">
-					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png">
+					<img src="<?php echo plugins_url('coviu-video-calls/images/link.png'); ?>">
 					<span class="tooltiptext">Copy Link</span>
 				</span>
 				<a href="<?php echo $url; ?>">
@@ -851,7 +851,7 @@ function cvu_session_display($options, $session, $allow_actions) {
 				</a>
 				<?php if ($end_time >= $now) { ?>
 					<span class='tooltip' onclick="delete_host('<?php echo $host['participant_id']; ?>');">
-						<img src="http://individual.icons-land.com/IconsPreview/BaseSoftware/PNG/16x16/DeleteRed.png">
+						<img src="<?php echo plugins_url('coviu-video-calls/images/DeleteRed.png'); ?>">
 						<span class="tooltiptext">Remove</span>
 					</span>
 				<?php } ?>
@@ -862,7 +862,7 @@ function cvu_session_display($options, $session, $allow_actions) {
 			<?php foreach($guests as $guest) { ?>
 				<?php $url = cvu_embed_participant_page($options, $guest); ?>
 				<span class='copy_link tooltip' data-link="<?php echo $url; ?>	">
-					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png">
+					<img src="<?php echo plugins_url('coviu-video-calls/images/link.png'); ?>">
 					<span class="tooltiptext">Copy Link</span>
 				</span>
 				<a href="<?php echo $url; ?>">
@@ -870,7 +870,7 @@ function cvu_session_display($options, $session, $allow_actions) {
 				</a>
 				<?php if ($end_time >= $now) { ?>
 					<span class='tooltip' onclick="delete_guest('<?php echo $guest['participant_id']; ?>');">
-						<img src="http://individual.icons-land.com/IconsPreview/BaseSoftware/PNG/16x16/DeleteRed.png">
+						<img src="<?php echo plugins_url('coviu-video-calls/images/DeleteRed.png'); ?>">
 						<span class="tooltiptext">Remove</span>
 					</span>
 				<?php } ?>
@@ -924,7 +924,8 @@ function cvu_embed_participant_page($options, $participant) {
 	$post = get_session_post_by_name($participant['participant_id']);
 
 	if ($post == null) {
-		$content = '<iframe src="' . $participant['entry_url'] . '" style="width: 100%; height: 600px; border: none"></iframe>';
+		$content = '<script src="https://static.coviu.com/extensions/integration-extensions/1.0.0/coviu-integration-extensions-1.0.0.js"></script> <script type="text/javascript">CoviuExtensions.init()</script><iframe src="' . $participant['entry_url'] . '" style="width: 100%; height: 600px; border: none" allow="microphone *; camera *"></iframe>';
+
 		$params = array(
 			'post_content' => $content,
 			'post_name' => $participant['participant_id'],
