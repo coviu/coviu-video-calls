@@ -263,6 +263,7 @@ function cvu_settings_page() {
 				$options->embed_participant_pages = isset($_POST['coviu']['embed_participant_pages']);
 				$options->oauth_url               = $_POST['coviu']['oauth_url'];
 				$options->require_oauth           = isset($_POST['coviu']['require_oauth']);
+
 				cvu_update_options($options);
 
 				?>
@@ -398,7 +399,7 @@ function cvu_settings_form( $actionurl, $options ) {
 					<?php $link = cvu_oauth_team_url($options); ?>
 					<h5><?php _e('Authorized With:', 'coviu-video-calls') ?> <?php echo $link ?></h5>
 				<?php } else { ?>
-					<h5><?php _e('No Team linked with') ?></h5>
+					<h5><?php _e('No Team linked') ?></h5>
 				<?php } ?>
 
 			</div>
@@ -415,15 +416,15 @@ function cvu_settings_form( $actionurl, $options ) {
 function cvu_oauth($coviu, $options) {
 	$user_options = cvu_get_user_options();
 
-	if (isset($_GET['code']) &&
-		isset($user_options['grant']) && is_null($user_options['grant'])) {
+	if (isset($_GET['code']) && is_null($user_options['grant'])) {
 		$code = $_GET['code'];
 
 		cvu_oauth_login($coviu, $options, $user_options, $code);
 	}
 
 	$user_options = cvu_get_user_options();
-	if (isset($user_options['grant']) && !is_null($user_options['grant'])) {
+
+	if (!is_null($user_options['grant'])) {
 		?> Connected to Coviu.
 		<form method="post" action="<?php echo $_SERVER["REQUEST_URI"] ?>">
 			<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
@@ -465,6 +466,7 @@ function cvu_oauth_login($coviu, $options, $user_options, $code) {
 	}
 
 	$user_options['grant'] = $grant;
+
 	cvu_update_user_options($user_options);
 }
 
@@ -968,6 +970,7 @@ function cvu_client($options, $user_id = null) {
 
 /// Cleanup function for cvu_client
 function cvu_update_client($coviu, $options, $user_id = null) {
+
 	$user_options = cvu_get_user_options($user_id);
 
 	$grant = $coviu->getGrant();
@@ -977,7 +980,7 @@ function cvu_update_client($coviu, $options, $user_id = null) {
 		return cvu_update_user_options($user_options, $user_id);
 	} else {
 		$options->grant = $grant;
-		return cvu_update_options($options);
+		cvu_update_options($options);
 	}
 }
 
@@ -987,12 +990,14 @@ function cvu_get_user_options($user_id = null) {
 	}
 
 	$options = get_user_meta($user_id, 'coviu-video-calls');
+
 	if (empty($options)) {
 		return [];
 	}
 	return $options[0];
 }
 
+// store info about the user
 function cvu_update_user_options($options, $user_id = null) {
 	if (is_null($user_id)) {
 		$user_id = get_current_user_id();
@@ -1001,8 +1006,9 @@ function cvu_update_user_options($options, $user_id = null) {
 	return update_user_meta($user_id, 'coviu-video-calls', $options);
 }
 
+// store info about the plugin
 function cvu_update_options($options) {
-	return update_option('coviu-video-calls', $options);
+	update_option('coviu-video-calls', $options);
 }
 
 function cvu_get_options() {
