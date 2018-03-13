@@ -4,7 +4,7 @@
  * Plugin URI: http://wordpress.org/extend/plugins/coviu-video-calls/
  * Description: Add Coviu video calling to your Website.
  * Author: Silvia Pfeiffer, NICTA, Coviu
- * Version: 0.5
+ * Version: 0.6
  * Author URI: http://www.coviu.com/
  * License: GPL2
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html.
@@ -35,7 +35,7 @@
 	@author     Silvia Pfeiffer <silvia.pfeiffer@coviu.com>
 	@copyright  Copyright 2015 Silvia Pfeiffer, NICTA, Coviu
 	@license    http://www.gnu.org/licenses/gpl.txt GPL 2.0
-	@version    0.5
+	@version    0.6
 	@link       http://wordpress.org/extend/plugins/coviu-video-calls/
 
 */
@@ -263,6 +263,7 @@ function cvu_settings_page() {
 				$options->embed_participant_pages = isset($_POST['coviu']['embed_participant_pages']);
 				$options->oauth_url               = $_POST['coviu']['oauth_url'];
 				$options->require_oauth           = isset($_POST['coviu']['require_oauth']);
+
 				cvu_update_options($options);
 
 				?>
@@ -398,7 +399,7 @@ function cvu_settings_form( $actionurl, $options ) {
 					<?php $link = cvu_oauth_team_url($options); ?>
 					<h5><?php _e('Authorized With:', 'coviu-video-calls') ?> <?php echo $link ?></h5>
 				<?php } else { ?>
-					<h5><?php _e('No Team linked with') ?></h5>
+					<h5><?php _e('No Team linked') ?></h5>
 				<?php } ?>
 
 			</div>
@@ -415,15 +416,15 @@ function cvu_settings_form( $actionurl, $options ) {
 function cvu_oauth($coviu, $options) {
 	$user_options = cvu_get_user_options();
 
-	if (isset($_GET['code']) &&
-		isset($user_options['grant']) && is_null($user_options['grant'])) {
+	if (isset($_GET['code']) && is_null($user_options['grant'])) {
 		$code = $_GET['code'];
 
 		cvu_oauth_login($coviu, $options, $user_options, $code);
 	}
 
 	$user_options = cvu_get_user_options();
-	if (isset($user_options['grant']) && !is_null($user_options['grant'])) {
+
+	if (!is_null($user_options['grant'])) {
 		?> Connected to Coviu.
 		<form method="post" action="<?php echo $_SERVER["REQUEST_URI"] ?>">
 			<?php wp_nonce_field( 'cvu_options', 'cvu_options_security' ); ?>
@@ -465,6 +466,7 @@ function cvu_oauth_login($coviu, $options, $user_options, $code) {
 	}
 
 	$user_options['grant'] = $grant;
+
 	cvu_update_user_options($user_options);
 }
 
@@ -843,7 +845,7 @@ function cvu_session_display($options, $session, $allow_actions) {
 				<?php $url = cvu_embed_participant_page($options, $host); ?>
 				<img src="<?php echo $host['picture']; ?>" width="30px"/>
 				<span class='copy_link tooltip' data-link="<?php echo $url; ?>">
-					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png">
+					<img src="<?php echo plugins_url('coviu-video-calls/images/link.png'); ?>">
 					<span class="tooltiptext">Copy Link</span>
 				</span>
 				<a href="<?php echo $url; ?>">
@@ -851,7 +853,7 @@ function cvu_session_display($options, $session, $allow_actions) {
 				</a>
 				<?php if ($end_time >= $now) { ?>
 					<span class='tooltip' onclick="delete_host('<?php echo $host['participant_id']; ?>');">
-						<img src="http://individual.icons-land.com/IconsPreview/BaseSoftware/PNG/16x16/DeleteRed.png">
+						<img src="<?php echo plugins_url('coviu-video-calls/images/DeleteRed.png'); ?>">
 						<span class="tooltiptext">Remove</span>
 					</span>
 				<?php } ?>
@@ -862,7 +864,7 @@ function cvu_session_display($options, $session, $allow_actions) {
 			<?php foreach($guests as $guest) { ?>
 				<?php $url = cvu_embed_participant_page($options, $guest); ?>
 				<span class='copy_link tooltip' data-link="<?php echo $url; ?>	">
-					<img src="http://c.dryicons.com/images/icon_sets/symbolize_icons_set/png/16x16/link.png">
+					<img src="<?php echo plugins_url('coviu-video-calls/images/link.png'); ?>">
 					<span class="tooltiptext">Copy Link</span>
 				</span>
 				<a href="<?php echo $url; ?>">
@@ -870,7 +872,7 @@ function cvu_session_display($options, $session, $allow_actions) {
 				</a>
 				<?php if ($end_time >= $now) { ?>
 					<span class='tooltip' onclick="delete_guest('<?php echo $guest['participant_id']; ?>');">
-						<img src="http://individual.icons-land.com/IconsPreview/BaseSoftware/PNG/16x16/DeleteRed.png">
+						<img src="<?php echo plugins_url('coviu-video-calls/images/DeleteRed.png'); ?>">
 						<span class="tooltiptext">Remove</span>
 					</span>
 				<?php } ?>
@@ -924,7 +926,8 @@ function cvu_embed_participant_page($options, $participant) {
 	$post = get_session_post_by_name($participant['participant_id']);
 
 	if ($post == null) {
-		$content = '<iframe src="' . $participant['entry_url'] . '" style="width: 100%; height: 600px; border: none"></iframe>';
+		$content = '<script src="https://static.coviu.com/extensions/integration-extensions/1.0.0/coviu-integration-extensions-1.0.0.js"></script> <script type="text/javascript">CoviuExtensions.init()</script><iframe src="' . $participant['entry_url'] . '" style="width: 100%; height: 600px; border: none" allow="microphone *; camera *"></iframe>';
+
 		$params = array(
 			'post_content' => $content,
 			'post_name' => $participant['participant_id'],
@@ -967,6 +970,7 @@ function cvu_client($options, $user_id = null) {
 
 /// Cleanup function for cvu_client
 function cvu_update_client($coviu, $options, $user_id = null) {
+
 	$user_options = cvu_get_user_options($user_id);
 
 	$grant = $coviu->getGrant();
@@ -976,7 +980,7 @@ function cvu_update_client($coviu, $options, $user_id = null) {
 		return cvu_update_user_options($user_options, $user_id);
 	} else {
 		$options->grant = $grant;
-		return cvu_update_options($options);
+		cvu_update_options($options);
 	}
 }
 
@@ -986,12 +990,14 @@ function cvu_get_user_options($user_id = null) {
 	}
 
 	$options = get_user_meta($user_id, 'coviu-video-calls');
+
 	if (empty($options)) {
 		return [];
 	}
 	return $options[0];
 }
 
+// store info about the user
 function cvu_update_user_options($options, $user_id = null) {
 	if (is_null($user_id)) {
 		$user_id = get_current_user_id();
@@ -1000,8 +1006,9 @@ function cvu_update_user_options($options, $user_id = null) {
 	return update_user_meta($user_id, 'coviu-video-calls', $options);
 }
 
+// store info about the plugin
 function cvu_update_options($options) {
-	return update_option('coviu-video-calls', $options);
+	update_option('coviu-video-calls', $options);
 }
 
 function cvu_get_options() {
